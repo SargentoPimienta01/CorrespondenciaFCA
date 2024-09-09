@@ -1,67 +1,125 @@
 ---
 import Logo from "../icons/logoNav.astro"
---- 
+---
 
 <nav>
-    <div class="logo-container"> 
-        <Logo/> 
+    <div class="logo-container">
+        <Logo />
     </div>
-    <ul>
+    <ul class="nav-list">
         <li>
-            <a>
-                <div class="nav-buttom">PRELIMINARES</div>
+            <a href="#">
+                <div class="nav-button">PRELIMINARES</div>
             </a>
         </li>
         <li>
-            <a>
-                <div class="nav-buttom">ANALISIS</div>
+            <a href="#">
+                <div class="nav-button">ANÁLISIS</div>
             </a>
         </li>
         <li>
-            <a>
-                <div class="nav-buttom">REPORTES</div>
+            <a href="#">
+                <div class="nav-button">REPORTES</div>
             </a>
         </li>
     </ul>
+    <div class="hamburger">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
 </nav>
 
 <style>
-    nav {
-        display: flex;
-        justify-content: space-between;
-        background-color: #1F284C;
-        height: 100px;
-    }
-
-    .logo-container{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding-left: 2.5rem;
-    }
-
-    ul{
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: flex-end;
-        align-items: center;
-    }
-
-    .nav-buttom{
-        display: flex;
-        color: #fbfbfb;
-        height: 30px;
-        width: 120px;
-        padding: 0, 50px, 20px;
-        align-items: center;
+    * {
+        margin: 0;
+        padding: 0;
         box-sizing: border-box;
     }
 
-    .nav-buttom:hover{
-        color: #1F284C;
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #1F284C;
+        height: 100px;
+        padding: 0 2rem;
+    }
+
+    .logo-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-list {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+        align-items: center;
+    }
+
+    .nav-button {
+        padding: 10px 15px;
+        border-radius: 5px;
+        background-color: transparent;
+        color: #fbfbfb;
+        font-size: 1rem;
+        font-weight: 400;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .nav-button:hover {
         background-color: #F9B818;
+        transform: scale(1.05);
+        color: #1F284C;
+    }
+
+    .hamburger {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+        gap: 5px;
+    }
+
+    .hamburger .line {
+        width: 25px;
+        height: 3px;
+        background-color: #fbfbfb;
+        transition: all 0.3s ease;
+    }
+
+    .hamburger-active .line:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .hamburger-active .line:nth-child(2) {
+        opacity: 0;
+    }
+
+    .hamburger-active .line:nth-child(3) {
+        transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    .nav-list.active {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100px;
+        left: 0;
+        width: 100%;
+        background-color: #1F284C;
+        padding: 2rem;
+        gap: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    @media (max-width: 790px) {
+        .nav-list {
+            display: none;
+        }
+
+        .hamburger {
+            display: flex;
+        }
     }
 </style>
-
-
-
