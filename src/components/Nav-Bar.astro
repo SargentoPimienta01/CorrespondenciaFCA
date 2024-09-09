@@ -1,0 +1,67 @@
+---
+import Logo from "../icons/logoNav.astro"
+--- 
+
+<nav>
+    <div class="logo-container"> 
+        <Logo/> 
+    </div>
+    <ul>
+        <li>
+            <a>
+                <div class="nav-buttom">PRELIMINARES</div>
+            </a>
+        </li>
+        <li>
+            <a>
+                <div class="nav-buttom">ANALISIS</div>
+            </a>
+        </li>
+        <li>
+            <a>
+                <div class="nav-buttom">REPORTES</div>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<style>
+    nav {
+        display: flex;
+        justify-content: space-between;
+        background-color: #1F284C;
+        height: 100px;
+    }
+
+    .logo-container{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-left: 2.5rem;
+    }
+
+    ul{
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .nav-buttom{
+        display: flex;
+        color: #fbfbfb;
+        height: 30px;
+        width: 120px;
+        padding: 0, 50px, 20px;
+        align-items: center;
+        box-sizing: border-box;
+    }
+
+    .nav-buttom:hover{
+        color: #1F284C;
+        background-color: #F9B818;
+    }
+</style>
+
+
+

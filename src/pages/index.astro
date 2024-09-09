@@ -10,8 +10,8 @@ import Card from '../components/Card.astro'
 </script>
 <Layout title="Iniciar sesión">
     <main>
+        <Logo />
         <div class="login-container">
-			<Logo />
             <form method="get">
             <h1>Inicio de Sesión</h1>
             <div class="form-container">
@@ -32,34 +32,35 @@ import Card from '../components/Card.astro'
             e.preventDefault();
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
-            if(data.cuenta == null || data.cuenta == ""  ||data.password == null || data.cuenta == "")
+            if(data.cuenta == null || data.cuenta == "1"  ||data.password == null || data.cuenta == "1")
             {
-                console.log("Ingresa la cuenta y el password")
-                return;
+                window.location.href = '/fcaSpace';
+                // console.log("Ingresa la cuenta y el password")
+                // return;
             }
-            try {
-                const url = `https://www.backwalkmanapi.somee.com/api/Usuario/Usuarios/${data.cuenta}/${data.password}`;
-                console.log(url);
-                const response = await fetch(url);
-                if (!response.ok) {
-                    const error = await response.json();
-                    alert(error.message);
-                    throw new Error('Error al validar al usuario');
-                }
-                const responseData = await response.json();
-                console.log(responseData);
-                const resToken = await fetch(`https://walkman-apie-xpress-js.vercel.app/login/login/${data.cuenta}`) 
-                const restokenData = await resToken.json();
-                console.log(restokenData);
-                const expiry = new Date().getTime() + 3600000;
-                localStorage.setItem('userID', restokenData.user._id);
-                localStorage.setItem('token', restokenData.token);
-                localStorage.setItem('expiry', expiry.toString());
-                localStorage.setItem('profilePicture', restokenData.user.URLFoto);
-                window.location.href = '/walkmanSpace';
-            } catch (error) {
-                console.error('Error al obtener datos desde la API:', error);
-            }
+            // try {
+            //     const url = `https://www.backwalkmanapi.somee.com/api/Usuario/Usuarios/${data.cuenta}/${data.password}`;
+            //     console.log(url);
+            //     const response = await fetch(url);
+            //     if (!response.ok) {
+            //         const error = await response.json();
+            //         alert(error.message);
+            //         throw new Error('Error al validar al usuario');
+            //     }
+            //     const responseData = await response.json();
+            //     console.log(responseData);
+            //     const resToken = await fetch(`https://walkman-apie-xpress-js.vercel.app/login/login/${data.cuenta}`) 
+            //     const restokenData = await resToken.json();
+            //     console.log(restokenData);
+            //     const expiry = new Date().getTime() + 3600000;
+            //     localStorage.setItem('userID', restokenData.user._id);
+            //     localStorage.setItem('token', restokenData.token);
+            //     localStorage.setItem('expiry', expiry.toString());
+            //     localStorage.setItem('profilePicture', restokenData.user.URLFoto);
+            //     window.location.href = '/fcaSpace';
+            // } catch (error) {
+            //     console.error('Error al obtener datos desde la API:', error);
+            // }
         });
     });
 </script>
@@ -69,11 +70,13 @@ import Card from '../components/Card.astro'
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100%;
+        height: 100vh;
+        flex-direction: column;
     }
 
     .login-container {
         text-align: center;
+        
     }
 
     h1 {
@@ -83,13 +86,13 @@ import Card from '../components/Card.astro'
     }
 
     .form-container {
-        max-width: 600px;
+        max-width: 400px;
         margin: 0 auto;
     }
 
     input {
         width: 100%;
-        padding: 0.5rem;
+        padding: 0.75rem;
         margin-bottom: 1rem;
         border-radius: 0.5rem;
         border: 1px solid #ccc;
@@ -100,36 +103,17 @@ import Card from '../components/Card.astro'
 		background: #fff;
 	}
 
-
-    .additional-info {
-        margin-top: 1rem;
-        display: flex;
-        justify-content: center;
-    }
-
-    .create-account {
-        color: #fff; 
-        margin-top: 1rem; 
-    }
-
-    .create-account a {
-        color: #dc2626; 
-        text-decoration: none;
-    }
-
-    .create-account a:hover {
-        text-decoration: underline; 
-    }
-
     .button-container {
         display: flex;
         flex-direction: column;
         gap: 0;
 		align-items: center;
+        margin-top: 1rem;
     }
 
     .login-button {
-		width: 300px;
+		width: 100%;
+        max-width: 300px;
         padding: 1rem 2rem;
         font-size: 1.5rem;
         border: none;
