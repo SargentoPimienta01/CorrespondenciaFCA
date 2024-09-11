@@ -55,6 +55,7 @@ const ProcessList = () => {
 
     const handleProcessClick = (e, procesoId) => {
       e.stopPropagation();  // Detiene la propagación al padre
+      console.log(`Clicked on process ID: ${procesoId}`);
       alert(`Detalles del proceso ${procesoId}`);
     };
   
@@ -64,17 +65,25 @@ const ProcessList = () => {
           <button 
             className="bg-azul text-white px-4 py-2 rounded cursor-pointer mr-5 transform hover:bg-amarillo hover:scale-105 transition-colors duration-300 ease-in-out"
             onClick={() => alert('Agregar nuevo proceso')}
+            
           >
             + Añadir Proceso
           </button>
+          <label htmlFor="codigo-documento" className="sr-only">Código del documento</label>
           <input
+            id="codigo-documento"
+            name="codigoDocumento"
             type="text"
             placeholder="Código del documento"
             className="flex-1 px-2 py-1 border border-black rounded"
             onChange={(e) => filterProcesos(e.target.value)}
           />
-          <button className="bg-transparent border-none cursor-pointer ml-2" onClick={() => alert('Buscar procesos')}>
-            <Search className="text-black w-5 h-5" />
+          <button 
+            id="buscar-btn"
+            name="buscar"
+            className="bg-transparent border-none cursor-pointer ml-2" 
+            onClick={() => alert('Buscar procesos')}>
+              <Search className="text-black w-5 h-5" />
           </button>
         </div>
   
@@ -98,7 +107,7 @@ const ProcessList = () => {
           ))}
         </div>
 
-        <a href="../pages/Documento.astro" className="text-blue-500 mt-2 hover:underline">
+        <a href="/documento" className="text-azul mt-2 hover:underline cursor-pointer">
           Ver Documentos
         </a>
   
