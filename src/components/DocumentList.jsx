@@ -1,51 +1,43 @@
 import React, { useState } from 'react';
 
-export const Search = ({ className }) => (
-    <svg className={className} role="img" fill="#000000" height="20" width="20" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 viewBox="0 0 488.4 488.4" xml:space="preserve">
-		<path d="M0,203.25c0,112.1,91.2,203.2,203.2,203.2c51.6,0,98.8-19.4,134.7-51.2l129.5,129.5c2.4,2.4,5.5,3.6,8.7,3.6
-			s6.3-1.2,8.7-3.6c4.8-4.8,4.8-12.5,0-17.3l-129.6-129.5c31.8-35.9,51.2-83,51.2-134.7c0-112.1-91.2-203.2-203.2-203.2
-			S0,91.15,0,203.25z M381.9,203.25c0,98.5-80.2,178.7-178.7,178.7s-178.7-80.2-178.7-178.7s80.2-178.7,178.7-178.7
-			S381.9,104.65,381.9,203.25z"/>
-    </svg>
-  )
-
 const procesos = [
-  {
-    id: 1,
-    codigo: 'ATT-DJ-A TR LP 449/2022',
-    descripcion: 'Formulación cargos incumplimientos custodia área operativa Viacha-Guasqui gestión 2021.',
-    fecha: '27/12/2022',
-  },
-  {
-    id: 2,
-    codigo: 'ATT-DJ-A TR LP 450/2022',
-    descripcion: 'Otro proceso ejemplo descripción.',
-    fecha: '28/12/2022',
-  },
-  {
-    id: 3,
-    codigo: 'ATT-DJ-A TR LP 420/2023',
-    descripcion: 'Propuesta de nuevas tarifas ATT',
-    fecha: '20/02/2023',
-  },
-  {
-    id: 4,
-    codigo: 'ATT-DJ-A TR LP 430/2023',
-    descripcion: 'Revisión de contrato ATT',
-    fecha: '23/04/2023',
-  },
-  {
-    id: 5,
-    codigo: 'ATT-DJ-A TR LP 440/2023',
-    descripcion: 'Modificación de solicitud ATT',
-    fecha: '28/09/2023',
-  },
-  // Más procesos...
-];
+    {
+      id: 1,
+      codigo: 'ATT-DJ-A TR LP 449/2022',
+      descripcion: 'Formulación cargos incumplimientos custodia área operativa Viacha-Guasqui gestión 2021.',
+      fecha: '27/12/2022',
+    },
+    {
+      id: 2,
+      codigo: 'ATT-DJ-A TR LP 450/2022',
+      descripcion: 'Otro proceso ejemplo descripción.',
+      fecha: '28/12/2022',
+    },
+    {
+      id: 3,
+      codigo: 'ATT-DJ-A TR LP 420/2023',
+      descripcion: 'Propuesta de nuevas tarifas ATT',
+      fecha: '20/02/2023',
+    },
+    {
+      id: 4,
+      codigo: 'ATT-DJ-A TR LP 430/2023',
+      descripcion: 'Revisión de contrato ATT',
+      fecha: '23/04/2023',
+    },
+    {
+      id: 5,
+      codigo: 'ATT-DJ-A TR LP 440/2023',
+      descripcion: 'Modificación de solicitud ATT',
+      fecha: '28/09/2023',
+    },
+    // Más procesos...
+  ];
+  
 
 const ProcessList = () => {
-    const [filteredProcesos, setFilteredProcesos] = useState(procesos); // Estado para manejar hover
+    const [filteredProcesos, setFilteredProcesos] = useState(procesos);
+    const [hoveredId, setHoveredId] = useState(null); // Estado para manejar hover
   
     const filterProcesos = (searchTerm) => {
       setFilteredProcesos(procesos.filter(proceso =>
@@ -97,10 +89,6 @@ const ProcessList = () => {
             </div>
           ))}
         </div>
-
-        <a href="../pages/Documento.astro" className="text-blue-500 mt-2 hover:underline">
-          Ver Documentos
-        </a>
   
         <div className="flex justify-center mt-5">
           <button className="px-4 py-1 bg-gray-300 mr-2 cursor-pointer hover:bg-gray-400">Previous</button>

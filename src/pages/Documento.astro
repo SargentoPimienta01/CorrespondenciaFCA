@@ -1,0 +1,35 @@
+---
+import Layout from "../layouts/Correspondencia.astro"
+import DocumentList from "../components/DocumentList"
+
+// Simulación de documentos de ejemplo (podrás cargarlos dinámicamente después).
+const documentos = [
+  {
+    id: 1,
+    nombre: 'Documento 1',
+    descripcion: 'Descripción del documento 1',
+    fecha: '01/01/2024',
+  },
+  {
+    id: 2,
+    nombre: 'Documento 2',
+    descripcion: 'Descripción del documento 2',
+    fecha: '02/01/2024',
+  },
+  // Más documentos...
+];
+---
+
+<Layout title="Documentos">
+
+  <section>
+    <DocumentList />
+  </section>
+  
+</Layout>
+
+<style>
+  section {
+    padding: 20px;
+  }
+</style>
