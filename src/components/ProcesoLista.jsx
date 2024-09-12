@@ -56,7 +56,7 @@ const ProcessList = () => {
     const handleProcessClick = (e, procesoId) => {
       e.stopPropagation();  // Detiene la propagación al padre
       console.log(`Clicked on process ID: ${procesoId}`);
-      navigate(`/documentos/${procesoId}`);
+      navigate(`/procesos/${procesoId}`);
     };
   
     return (
@@ -98,7 +98,7 @@ const ProcessList = () => {
             className="bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer"
           >
             <div className='p-4'>
-            <a href={`/documentos/${proceso.id}`} className="hover:text-azul hover:no-underline" >
+            <a href={`/procesos/${proceso.id}`} className="hover:text-azul hover:no-underline" >
               <div className="flex justify-between w-full mb-2">
                 <span className="text-lg font-bold text-gray-800">{proceso.codigo}</span>
                 <span className="text-sm text-gray-500">{proceso.fecha}</span>

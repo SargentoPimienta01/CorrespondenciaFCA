@@ -1,0 +1,29 @@
+---
+import Correspondencia from "../layouts/Correspondencia.astro"
+import DocumentoNuevo from "../components/New_Document"
+
+const usuarios = [
+  { id_usuario: 1, nombre: 'Juan Carlos Villaroel' },
+  { id_usuario: 2, nombre: 'Mariel Villamizar' },
+  { id_usuario: 3, nombre: 'Luis Predrazas' },
+  { id_usuario: 4, nombre: 'Oscar Uria' },
+  { id_usuario: 5, nombre: 'Carlos Lopez' }
+];
+---
+
+<Correspondencia title="Seguimiento de Procesos ATT">
+	<div class="title">
+	  <h1>NUEVO DOCUMENTO ATT</h1>
+	</div>
+  
+	<!-- Renderizar la lista de procesos -->
+	<DocumentoNuevo usuarios={usuarios}/>
+  </Correspondencia>
+  
+  <style is:global>
+	.title {
+	  text-align: center;
+	  font-size: 40px;
+	  font-weight: bold;
+	}
+  </style>

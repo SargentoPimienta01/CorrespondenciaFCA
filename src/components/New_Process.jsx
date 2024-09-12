@@ -36,7 +36,6 @@ const NewProcessForm = ({
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
-      <h1 className="text-3xl font-bold text-center mb-8">{isEdit ? 'Editar Proceso' : 'Nuevo Proceso'}</h1>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="flex flex-col">
@@ -140,12 +139,17 @@ const NewProcessForm = ({
             onChange={handleInputChange}
           />
         </div>
+        <a href='/nuevo-documento'>
+        <button
+            type="submit"
+            className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
+          >
+            Cargar Documento
+        </button>
+        </a>
 
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-semibold">Cargar Documento</label>
-            <input type="file" className="text-sm" />
-          </div>
+        
           <button
             type="submit"
             className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
@@ -153,6 +157,7 @@ const NewProcessForm = ({
             {isEdit ? 'Guardar Cambios' : 'Subir Datos'}
           </button>
         </div>
+        
       </form>
     </div>
   );
