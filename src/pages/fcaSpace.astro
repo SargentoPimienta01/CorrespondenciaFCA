@@ -1,19 +1,21 @@
 ---
 import Correspondencia from "../layouts/Correspondencia.astro"
+import ProcesoLista from "../components/ProcesoLista"
 ---
 
-<Correspondencia title="Correspondencia">
-	<div
-    id="playlist-container"
-    class="">
-
-	<div class="">
-		<!-- <Greeting /> -->
-  
-		<div
-		  class=""
-		>
-		</div>
+<Correspondencia title="Seguimiento de Procesos ATT">
+	<div class="title">
+	  <h1>SEGUIMIENTO - PROCESOS ATT</h1>
 	</div>
-	
-</Correspondencia>
+  
+	<!-- Renderizar la lista de procesos -->
+	<ProcesoLista client:load />
+  </Correspondencia>
+  
+  <style is:global>
+	.title {
+	  text-align: center;
+	  font-size: 40px;
+	  font-weight: bold;
+	}
+  </style>

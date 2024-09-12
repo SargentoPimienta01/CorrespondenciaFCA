@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export const Search = ({ className }) => (
     <svg className={className} role="img" fill="#000000" height="20" width="20" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
@@ -56,7 +57,7 @@ const ProcessList = () => {
     const handleProcessClick = (e, procesoId) => {
       e.stopPropagation();  // Detiene la propagación al padre
       console.log(`Clicked on process ID: ${procesoId}`);
-      alert(`Detalles del proceso ${procesoId}`);
+      navigate(`/documentos/${procesoId}`);
     };
   
     return (
@@ -88,28 +89,25 @@ const ProcessList = () => {
         </div>
   
         <div className="flex flex-col gap-3">
-          {filteredProcesos.map(proceso => (
-            <div
-              key={proceso.id}
-              className="bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer"
-              onClick={(e) => handleProcessClick(e, proceso.id)}
-            >
-              <div className='p-4'>
-                <div className="flex justify-between w-full mb-2">
-                  <span className="text-lg font-bold text-gray-800">{proceso.codigo}</span>
-                  <span className="text-sm text-gray-500">{proceso.fecha}</span>
-                </div>
-                <div className="text-gray-600">
-                  {proceso.descripcion}
-                </div>
+        {filteredProcesos.map(proceso => (
+          <div
+            key={proceso.id}
+            className="bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer"
+          >
+            <div className='p-4'>
+            <a href={`/documentos/${proceso.id}`} className="hover:text-azul hover:no-underline" >
+              <div className="flex justify-between w-full mb-2">
+                <span className="text-lg font-bold text-gray-800">{proceso.codigo}</span>
+                <span className="text-sm text-gray-500">{proceso.fecha}</span>
               </div>
-            </div>
-          ))}
-        </div>
-
-        <a href="/documento" className="text-azul mt-2 hover:underline cursor-pointer">
-          Ver Documentos
-        </a>
+              <div className="text-gray-600">
+                {proceso.descripcion}
+              </div>
+            </a>
+            </div>            
+          </div>
+        ))}
+      </div>
   
         <div className="flex justify-center mt-5">
           <button className="px-4 py-1 bg-gray-300 mr-2 cursor-pointer hover:bg-gray-400">Previous</button>

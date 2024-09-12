@@ -1,0 +1,65 @@
+---
+import Layout from '../../layouts/Correspondencia.astro';
+
+// Simula una base de datos de documentos
+const procesos = [
+  {
+    id: 1,
+    codigo: 'ATT-DJ-A TR LP 449/2022',
+    descripcion: 'Formulación cargos incumplimientos custodia área operativa Viacha-Guasqui gestión 2021.',
+    fecha: '27/12/2022',
+  },
+  {
+    id: 2,
+    codigo: 'ATT-DJ-A TR LP 450/2022',
+    descripcion: 'Otro proceso ejemplo descripción.',
+    fecha: '28/12/2022',
+  },
+  {
+    id: 3,
+    codigo: 'ATT-DJ-A TR LP 420/2023',
+    descripcion: 'Propuesta de nuevas tarifas ATT',
+    fecha: '20/02/2023',
+  },
+  {
+    id: 4,
+    codigo: 'ATT-DJ-A TR LP 430/2023',
+    descripcion: 'Revisión de contrato ATT',
+    fecha: '23/04/2023',
+  },
+  {
+    id: 5,
+    codigo: 'ATT-DJ-A TR LP 440/2023',
+    descripcion: 'Modificación de solicitud ATT',
+    fecha: '28/09/2023',
+  },
+  // más documentos...
+];
+
+// Obtiene el parámetro de la URL
+const { id } = Astro.params;
+
+if (!id) {
+  throw new Error("El ID del documento no fue proporcionado.");
+}
+
+// Encuentra el documento correspondiente por su ID
+const documento = procesos.find((p) => p.id === parseInt(id));
+---
+
+<Layout title="Documentos">
+  <section class="p-5">
+    {documento ? (
+      <>
+        <h1 class="text-2xl font-bold mb-4">Detalles del Documento {documento.codigo}</h1>
+        <div class="bg-gray-100 p-4 rounded-lg shadow-md">
+          <h2 class="text-xl font-bold">Código: {documento.codigo}</h2>
+          <p class="mt-2">Descripción: {documento.descripcion}</p>
+          <p class="mt-2 text-gray-500">Fecha: {documento.fecha}</p>
+        </div>
+      </>
+    ) : (
+      <p>No se encontró el documento.</p>
+    )}
+  </section>
+</Layout>
