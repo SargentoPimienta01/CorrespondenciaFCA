@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Correspondencia.astro';
+import Proceso from '../../components/New_Process';
 
 // Simula una base de datos de documentos
 const procesos = [
@@ -7,32 +8,68 @@ const procesos = [
     id: 1,
     codigo: 'ATT-DJ-A TR LP 449/2022',
     descripcion: 'Formulación cargos incumplimientos custodia área operativa Viacha-Guasqui gestión 2021.',
-    fecha: '27/12/2022',
+    fechaIngreso: '2024-08-28',
+    fechaLimite: '2024-09-30',
+    asignado: 'Juan Perez',
+    comentarios: 'Sin comentarios.',
+    instruccion: 'Revisar el estado del proceso.',
+    documentosRelacionados: 'Documento de referencia: TR-LP-2019'
   },
   {
     id: 2,
     codigo: 'ATT-DJ-A TR LP 450/2022',
     descripcion: 'Otro proceso ejemplo descripción.',
-    fecha: '28/12/2022',
+    fechaIngreso: '2024-08-28',
+    fechaLimite: '2024-09-30',
+    asignado: 'Maria Gomez',
+    comentarios: 'Documentación adicional requerida.',
+    instruccion: 'Finalizar revisión.',
+    documentosRelacionados: 'Documento de referencia: TR-LP-2020'
   },
   {
     id: 3,
-    codigo: 'ATT-DJ-A TR LP 420/2023',
-    descripcion: 'Propuesta de nuevas tarifas ATT',
-    fecha: '20/02/2023',
+    codigo: 'ATT-DJ-A TR LP 451/2022',
+    descripcion: 'Revisión de informes de cumplimiento en áreas rurales.',
+    fechaIngreso: '2024-08-15',
+    fechaLimite: '2024-09-15',
+    asignado: 'Carlos Sanchez',
+    comentarios: 'Pendiente de aprobación por el comité.',
+    instruccion: 'Solicitar revisión por parte del supervisor.',
+    documentosRelacionados: 'Informe complementario: TR-LP-2021'
   },
   {
     id: 4,
-    codigo: 'ATT-DJ-A TR LP 430/2023',
-    descripcion: 'Revisión de contrato ATT',
-    fecha: '23/04/2023',
+    codigo: 'ATT-DJ-A TR LP 452/2022',
+    descripcion: 'Auditoría interna de servicios de telecomunicaciones 2023.',
+    fechaIngreso: '2024-07-30',
+    fechaLimite: '2024-09-01',
+    asignado: 'Ana Torres',
+    comentarios: 'Requiere validación de datos.',
+    instruccion: 'Enviar datos al departamento de auditoría.',
+    documentosRelacionados: 'Reporte de auditoría 2022: TR-LP-2018'
   },
   {
     id: 5,
-    codigo: 'ATT-DJ-A TR LP 440/2023',
-    descripcion: 'Modificación de solicitud ATT',
-    fecha: '28/09/2023',
+    codigo: 'ATT-DJ-A TR LP 453/2022',
+    descripcion: 'Actualización de regulaciones para operadores de telecomunicaciones.',
+    fechaIngreso: '2024-06-25',
+    fechaLimite: '2024-07-25',
+    asignado: 'Roberto Diaz',
+    comentarios: 'Proceso urgente debido a cambios en la ley.',
+    instruccion: 'Priorizar revisión por el equipo legal.',
+    documentosRelacionados: 'Reglamento vigente: TR-LP-2017'
   },
+  {
+    id: 6,
+    codigo: 'ATT-DJ-A TR LP 454/2022',
+    descripcion: 'Inspección de estaciones base en zonas urbanas.',
+    fechaIngreso: '2024-05-10',
+    fechaLimite: '2024-06-10',
+    asignado: 'Laura Fernandez',
+    comentarios: 'Informe preliminar recibido.',
+    instruccion: 'Realizar una inspección adicional en las estaciones afectadas.',
+    documentosRelacionados: 'Informe de inspección: TR-LP-2021'
+  }
   // más documentos...
 ];
 
@@ -50,14 +87,17 @@ const documento = procesos.find((p) => p.id === parseInt(id));
 <Layout title="Documentos">
   <section class="p-5">
     {documento ? (
-      <>
-        <h1 class="text-2xl font-bold mb-4">Detalles del Documento {documento.codigo}</h1>
-        <div class="bg-gray-100 p-4 rounded-lg shadow-md">
-          <h2 class="text-xl font-bold">Código: {documento.codigo}</h2>
-          <p class="mt-2">Descripción: {documento.descripcion}</p>
-          <p class="mt-2 text-gray-500">Fecha: {documento.fecha}</p>
-        </div>
-      </>
+      <Proceso 
+        idDocumento={documento.codigo}
+        fechaIngreso={documento.fechaIngreso}
+        fechaLimite={documento.fechaLimite}
+        asignado={documento.asignado}
+        asunto={documento.descripcion}
+        comentarios={documento.comentarios}
+        instruccion={documento.instruccion}
+        documentosRelacionados={documento.documentosRelacionados}
+        isEdit={true}
+      />
     ) : (
       <p>No se encontró el documento.</p>
     )}
