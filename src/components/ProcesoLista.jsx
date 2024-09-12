@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export const Search = ({ className }) => (
     <svg className={className} role="img" fill="#000000" height="20" width="20" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
@@ -63,13 +62,17 @@ const ProcessList = () => {
     return (
       <div className="p-5">
         <div className="flex justify-between items-center mb-5">
+        <a
+          href="/nuevo-proceso"
+          className="hover: no-underline"
+        >
           <button 
             className="bg-azul text-white px-4 py-2 rounded cursor-pointer mr-5 transform hover:bg-amarillo hover:scale-105 transition-colors duration-300 ease-in-out"
-            onClick={() => alert('Agregar nuevo proceso')}
             
           >
             + Añadir Proceso
           </button>
+        </a>
           <label htmlFor="codigo-documento" className="sr-only">Código del documento</label>
           <input
             id="codigo-documento"

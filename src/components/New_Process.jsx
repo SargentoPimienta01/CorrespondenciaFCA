@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Layout from '../layouts/Correspondencia.astro';
 
 const NewProcessForm = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +25,6 @@ const NewProcessForm = () => {
   };
 
   return (
-    <Layout title='Nuevo Proceso'>
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
       <h1 className="text-3xl font-bold text-center mb-8">Registro - Documentación ATT</h1>
       <form onSubmit={handleSubmit}>
@@ -158,7 +156,6 @@ const NewProcessForm = () => {
         </div>
       </form>
     </div>
-    </Layout>
   );
 };
 

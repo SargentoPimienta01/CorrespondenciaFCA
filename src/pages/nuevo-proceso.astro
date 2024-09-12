@@ -1,0 +1,21 @@
+---
+import Correspondencia from "../layouts/Correspondencia.astro"
+import ProcesoNuevo from "../components/New_Process"
+---
+
+<Correspondencia title="Seguimiento de Procesos ATT">
+	<div class="title">
+	  <h1>NUEVO PROCESOS ATT</h1>
+	</div>
+  
+	<!-- Renderizar la lista de procesos -->
+	<ProcesoNuevo client:load />
+  </Correspondencia>
+  
+  <style is:global>
+	.title {
+	  text-align: center;
+	  font-size: 40px;
+	  font-weight: bold;
+	}
+  </style>
