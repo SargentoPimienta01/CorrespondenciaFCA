@@ -29,38 +29,54 @@ import Card from '../components/Card.astro'
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.querySelector('form');
         form?.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Prevenir el comportamiento predeterminado del formulario
             const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            if(data.cuenta == null || data.cuenta == "1"  ||data.password == null || data.cuenta == "1")
-            {
-                window.location.href = '/fcaSpace';
-                // console.log("Ingresa la cuenta y el password")
-                // return;
+            const data = Object.fromEntries(formData.entries()); // Obtener datos del formulario
+
+            // Validar que los campos no estén vacíos
+            if (!data.cuenta || !data.password) {
+                console.log("Por favor, ingresa la cuenta y la contraseña");
+                return;
             }
-            // try {
-            //     const url = `https://www.backwalkmanapi.somee.com/api/Usuario/Usuarios/${data.cuenta}/${data.password}`;
-            //     console.log(url);
-            //     const response = await fetch(url);
-            //     if (!response.ok) {
-            //         const error = await response.json();
-            //         alert(error.message);
-            //         throw new Error('Error al validar al usuario');
-            //     }
-            //     const responseData = await response.json();
-            //     console.log(responseData);
-            //     const resToken = await fetch(`https://walkman-apie-xpress-js.vercel.app/login/login/${data.cuenta}`) 
-            //     const restokenData = await resToken.json();
-            //     console.log(restokenData);
-            //     const expiry = new Date().getTime() + 3600000;
-            //     localStorage.setItem('userID', restokenData.user._id);
-            //     localStorage.setItem('token', restokenData.token);
-            //     localStorage.setItem('expiry', expiry.toString());
-            //     localStorage.setItem('profilePicture', restokenData.user.URLFoto);
-            //     window.location.href = '/fcaSpace';
-            // } catch (error) {
-            //     console.error('Error al obtener datos desde la API:', error);
-            // }
+
+            try {
+                // URL del endpoint de autenticación de tu API
+                const url = `http://localhost:5064/api/login`;
+
+                // Realizar la solicitud POST con las credenciales
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // Especificar que el cuerpo es JSON
+                    },
+                    body: JSON.stringify({
+                        Correo: data.cuenta, // Correo electrónico
+                        Contrasenia: data.password // Contraseña
+                    })
+                });
+
+                // Verificar si la respuesta es válida
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.message);
+                    throw new Error('Error al validar al usuario');
+                }
+
+                // Procesar los datos de la respuesta (token JWT)
+                const responseData = await response.json();
+                console.log(responseData);
+
+                // Almacenar el token JWT en localStorage
+                const token = responseData.token;
+                const expiry = new Date().getTime() + 3600000; // 1 hora de expiración
+                localStorage.setItem('token', token);
+                localStorage.setItem('expiry', expiry.toString());
+
+                // Redirigir al espacio FCA o al panel de control
+                window.location.href = '/fcaSpace';
+            } catch (error) {
+                console.error('Error al autenticar con la API:', error);
+            }
         });
     });
 </script>
