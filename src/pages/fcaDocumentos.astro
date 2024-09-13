@@ -1,0 +1,21 @@
+---
+import Correspondencia from "../layouts/Correspondencia.astro"
+import DocumentoLista from "../components/DocumentoLista"
+---
+
+<Correspondencia title="Seguimiento de Procesos ATT">
+	<div class="title">
+	  <h1>SEGUIMIENTO - DOCUMENTOS ATT</h1>
+	</div>
+  
+	<!-- Renderizar la lista de procesos -->
+	<DocumentoLista client:load />
+  </Correspondencia>
+  
+  <style is:global>
+	.title {
+	  text-align: center;
+	  font-size: 40px;
+	  font-weight: bold;
+	}
+  </style>
