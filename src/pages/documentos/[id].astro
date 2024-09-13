@@ -1,0 +1,111 @@
+---
+import Layout from '../../layouts/Correspondencia.astro';
+
+interface Documento {
+  id_documento: number;
+  codigo_doc: string;
+  fecha_recepcion_fca: string;
+  fecha_entrega: string;
+  fecha_plazo: string;
+  asunto_doc: string;
+  observaciones: string;
+  tipo_documento: string;
+  id_encargado: number;
+}
+
+// Datos simulados para los documentos
+const documentos: Documento[] = [
+  {
+    id_documento: 1,
+    codigo_doc: 'ATT-20230905-001',
+    fecha_recepcion_fca: '2024-09-01 09:30',
+    fecha_entrega: '2024-09-05 17:00',
+    fecha_plazo: '2024-09-10 17:00',
+    asunto_doc: 'Solicitud de actualización de regulaciones',
+    observaciones: 'Ninguna observación',
+    tipo_documento: 'Regulación',
+    id_encargado: 1,
+  },
+  {
+    id_documento: 2,
+    codigo_doc: 'ATT-20230905-002',
+    fecha_recepcion_fca: '2024-09-02 10:15',
+    fecha_entrega: '2024-09-06 12:00',
+    fecha_plazo: '2024-09-12 12:00',
+    asunto_doc: 'Informe técnico anual',
+    observaciones: 'Pendiente de revisión por el área técnica',
+    tipo_documento: 'Informe',
+    id_encargado: 2,
+  },
+  // Añade más documentos según sea necesario...
+];
+
+// Obtén el ID de la URL
+const { id } = Astro.params;
+const documento = documentos.find(doc => doc.id_documento === Number(id));
+
+if (!documento) {
+  throw new Error('Documento no encontrado');
+}
+---
+
+<Layout title={`Detalles del Documento ${documento.codigo_doc}`}>
+  <main class="p-5">
+    <h1 class="text-2xl font-bold mb-5">Detalles del Documento: {documento.codigo_doc}</h1>
+
+    <div class="grid grid-cols-2 gap-5">
+      <div class="col-span-2 sm:col-span-1">
+        <label class="block text-sm font-medium text-gray-700">ID del Documento</label>
+        <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.codigo_doc}</div>
+      </div>
+
+      <div class="col-span-2 sm:col-span-1">
+        <label class="block text-sm font-medium text-gray-700">Fecha de Recepción FCA</label>
+        <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fecha_recepcion_fca}</div>
+      </div>
+
+      <div class="col-span-2 sm:col-span-1">
+        <label class="block text-sm font-medium text-gray-700">Fecha de Entrega</label>
+        <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fecha_entrega}</div>
+      </div>
+
+      <div class="col-span-2 sm:col-span-1">
+        <label class="block text-sm font-medium text-gray-700">Fecha Plazo</label>
+        <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fecha_plazo}</div>
+      </div>
+
+      <div class="col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Asunto</label>
+        <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.asunto_doc}</div>
+      </div>
+
+      <div class="col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Observaciones</label>
+        <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.observaciones}</div>
+      </div>
+
+      <div class="col-span-2 sm:col-span-1">
+        <label class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
+        <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.tipo_documento}</div>
+      </div>
+
+      <div class="col-span-2 sm:col-span-1">
+        <label class="block text-sm font-medium text-gray-700">Encargado</label>
+        <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.id_encargado}</div>
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <button class="bg-blue-500 text-white px-4 py-2 rounded">Editar Documento</button>
+    </div>
+  </main>
+</Layout>
+
+<style is:global>
+  body {
+    background-color: #f9f9f9;
+  }
+  .block {
+    margin-bottom: 0.5rem;
+  }
+</style>

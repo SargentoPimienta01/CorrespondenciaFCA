@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Correspondencia.astro';
 import Proceso from '../../components/New_Process';
+import DocumentList from '../../components/DocumentoLista';
 
 // Simula una base de datos de documentos
 const procesos = [
@@ -101,5 +102,8 @@ const documento = procesos.find((p) => p.id === parseInt(id));
     ) : (
       <p>No se encontró el documento.</p>
     )}
+
+    <DocumentList client:load/>
+
   </section>
 </Layout>
