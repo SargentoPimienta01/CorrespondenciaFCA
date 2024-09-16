@@ -33,16 +33,16 @@ import Card from '../components/Card.astro'
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries()); // Obtener datos del formulario
 
-            // Validar que los campos no estén vacíos
-            if (!data.cuenta || !data.password) {
-                console.log("Por favor, ingresa la cuenta y la contraseña");
+            if(data.cuenta == null || data.cuenta == ""  ||data.password == null || data.cuenta == "")
+            {
+                console.log("Ingresa la cuenta y el password")
                 return;
             }
-
+  
             try {
                 // URL del endpoint de autenticación de tu API
-                const url = `http://localhost:5064/api/login`;
-
+                const url = `http://localhost:5064/api/Auth/login`;
+  
                 // Realizar la solicitud POST con las credenciales
                 const response = await fetch(url, {
                     method: 'POST',
@@ -54,32 +54,33 @@ import Card from '../components/Card.astro'
                         Contrasenia: data.password // Contraseña
                     })
                 });
-
+  
                 // Verificar si la respuesta es válida
                 if (!response.ok) {
                     const error = await response.json();
-                    alert(error.message);
+                    alert(error.title || 'Error al iniciar sesión');
                     throw new Error('Error al validar al usuario');
                 }
-
+  
                 // Procesar los datos de la respuesta (token JWT)
                 const responseData = await response.json();
                 console.log(responseData);
-
+  
                 // Almacenar el token JWT en localStorage
-                const token = responseData.token;
+                const token = responseData.data.token;
                 const expiry = new Date().getTime() + 3600000; // 1 hora de expiración
                 localStorage.setItem('token', token);
                 localStorage.setItem('expiry', expiry.toString());
-
+  
                 // Redirigir al espacio FCA o al panel de control
                 window.location.href = '/fcaSpace';
             } catch (error) {
                 console.error('Error al autenticar con la API:', error);
+                alert('Error al autenticar. Revisa tu conexión o credenciales.');
             }
         });
     });
-</script>
+  </script>
 
 <style>
     main {
