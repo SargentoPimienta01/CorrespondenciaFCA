@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 
 export const Search = ({ className }) => (
     <svg className={className} role="img" fill="#000000" height="20" width="20" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" 
-	 viewBox="0 0 488.4 488.4">
-		<path d="M0,203.25c0,112.1,91.2,203.2,203.2,203.2c51.6,0,98.8-19.4,134.7-51.2l129.5,129.5c2.4,2.4,5.5,3.6,8.7,3.6
-			s6.3-1.2,8.7-3.6c4.8-4.8,4.8-12.5,0-17.3l-129.6-129.5c31.8-35.9,51.2-83,51.2-134.7c0-112.1-91.2-203.2-203.2-203.2
-			S0,91.15,0,203.25z M381.9,203.25c0,98.5-80.2,178.7-178.7,178.7s-178.7-80.2-178.7-178.7s80.2-178.7,178.7-178.7
-			S381.9,104.65,381.9,203.25z"/>
+    viewBox="0 0 488.4 488.4">
+        <path d="M0,203.25c0,112.1,91.2,203.2,203.2,203.2c51.6,0,98.8-19.4,134.7-51.2l129.5,129.5c2.4,2.4,5.5,3.6,8.7,3.6
+            s6.3-1.2,8.7-3.6c4.8-4.8,4.8-12.5,0-17.3l-129.6-129.5c31.8-35.9,51.2-83,51.2-134.7c0-112.1-91.2-203.2-203.2-203.2
+            S0,91.15,0,203.25z M381.9,203.25c0,98.5-80.2,178.7-178.7,178.7s-178.7-80.2-178.7-178.7s80.2-178.7,178.7-178.7
+            S381.9,104.65,381.9,203.25z"/>
     </svg>
-  )
+  );
 
-  const ProcessList = () => {
+const ProcessList = () => {
     const [procesos, setProcesos] = useState([]); // Estado para almacenar los procesos
     const [filteredProcesos, setFilteredProcesos] = useState([]); // Estado para manejar los procesos filtrados
     const [loading, setLoading] = useState(true); // Estado para manejar la carga
@@ -34,15 +34,12 @@ export const Search = ({ className }) => (
           }
     
           const result = await response.json();
-          
-          console.log('Respuesta de la API:', result);
     
-          // Verifica si el array está dentro de result.data.procesos
           if (result.data && Array.isArray(result.data.procesos)) {
-            setProcesos(result.data.procesos); // Actualiza el estado con los procesos obtenidos
-            setFilteredProcesos(result.data.procesos); // Inicialmente, muestra todos los procesos
+            setProcesos(result.data.procesos);  // Establecer los procesos obtenidos
+            setFilteredProcesos(result.data.procesos);  // Inicialmente, muestra todos los procesos
           } else {
-            throw new Error('La respuesta no contiene un array de procesos');
+            throw new Error('La API no devolvió un array de Procesos');
           }
     
           setLoading(false); // Detiene la carga
@@ -55,21 +52,18 @@ export const Search = ({ className }) => (
       fetchProcesos();
     }, []);
   
-    // Función para filtrar procesos por código
     const filterProcesos = (searchTerm) => {
       setFilteredProcesos(procesos.filter(proceso =>
         proceso.codigo.toLowerCase().includes(searchTerm.toLowerCase())
       ));
     };
   
-    // Función para manejar el click en un proceso
     const handleProcessClick = (e, procesoId) => {
       e.stopPropagation(); // Detiene la propagación al padre
-      console.log(`Clicked on process ID: ${procesoId}`);
-      navigate(`/procesos/${procesoId}`);
+      localStorage.setItem('procesoId', procesoId);  // Guardar el ID del proceso en localStorage
+      window.location.href = `/procesos/${procesoId}`; // Navegar a la página del proceso
     };
   
-    // Muestra un mensaje de carga o de error
     if (loading) return <p>Cargando procesos...</p>;
     if (error) return <p>Error: {error}</p>;
   
@@ -107,7 +101,7 @@ export const Search = ({ className }) => (
               <div
                 key={proceso.idProceso} 
                 className="bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer"
-                onClick={(e) => handleProcessClick(e, proceso.id)}
+                onClick={(e) => handleProcessClick(e, proceso.idProceso)}
               >
                 <div className='p-4'>
                   <a href={`/procesos/${proceso.idProceso}`} className="hover:text-azul hover:no-underline">
@@ -125,12 +119,6 @@ export const Search = ({ className }) => (
           ) : (
             <p>No hay procesos disponibles.</p>
           )}
-        </div>
-  
-        <div className="flex justify-center mt-5">
-          <button className="px-4 py-1 bg-gray-300 mr-2 cursor-pointer hover:bg-gray-400">Previous</button>
-          <span className="px-4 py-1 font-bold">1</span>
-          <button className="px-4 py-1 bg-gray-300 ml-2 cursor-pointer hover:bg-gray-400">Next</button>
         </div>
       </div>
     );

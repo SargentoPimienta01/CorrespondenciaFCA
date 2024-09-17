@@ -29,9 +29,41 @@ const NewProcessForm = ({
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Datos enviados:', formData);
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No se ha encontrado un token de autenticación');
+      return;
+    }
+
+    try {
+      const url = isEdit
+        ? `http://localhost:5064/api/procesos/${formData.idDocumento}`
+        : 'http://localhost:5064/api/procesos';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al enviar los datos del proceso');
+      }
+
+      const result = await response.json();
+      console.log('Proceso enviado:', result);
+      // Aquí puedes redirigir al usuario o mostrar un mensaje de éxito
+
+    } catch (error) {
+      console.error('Hubo un problema al enviar los datos del proceso:', error);
+    }
   };
 
   return (
@@ -139,17 +171,8 @@ const NewProcessForm = ({
             onChange={handleInputChange}
           />
         </div>
-        <a href='/nuevo-documento'>
-        <button
-            type="submit"
-            className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
-          >
-            Cargar Documento
-        </button>
-        </a>
 
         <div className="flex justify-between items-center mb-6">
-        
           <button
             type="submit"
             className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
@@ -157,7 +180,6 @@ const NewProcessForm = ({
             {isEdit ? 'Guardar Cambios' : 'Subir Datos'}
           </button>
         </div>
-        
       </form>
     </div>
   );

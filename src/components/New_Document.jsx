@@ -20,11 +20,36 @@ const NewDocumentForm = ({ usuarios }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Nuevo documento creado:', formData);
-    // Aquí podrías enviar los datos al backend para insertar en la base de datos
-    // fetch('/api/documentos', { method: 'POST', body: JSON.stringify(formData) })
+
+    const token = localStorage.getItem('token'); // Obtener el token del almacenamiento local
+    if (!token) {
+      console.error('No se ha encontrado un token de autenticación');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5064/api/documentos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData), // Enviamos los datos del formulario como JSON
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al registrar el documento');
+      }
+
+      const result = await response.json();
+      console.log('Nuevo documento creado:', result);
+      // Aquí puedes agregar alguna lógica para mostrar un mensaje de éxito o redirigir a otra página
+
+    } catch (error) {
+      console.error('Hubo un problema al registrar el documento:', error);
+    }
   };
 
   return (
