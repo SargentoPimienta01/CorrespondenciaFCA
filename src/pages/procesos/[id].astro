@@ -1,109 +1,96 @@
 ---
 import Layout from '../../layouts/Correspondencia.astro';
 import Proceso from '../../components/New_Process';
-import DocumentList from '../../components/DocumentoLista';
+import DocumentList from '../../components/DocProcList';
 
-// Simula una base de datos de documentos
-const procesos = [
-  {
-    id: 1,
-    codigo: 'ATT-DJ-A TR LP 449/2022',
-    descripcion: 'Formulación cargos incumplimientos custodia área operativa Viacha-Guasqui gestión 2021.',
-    fechaIngreso: '2024-08-28',
-    fechaLimite: '2024-09-30',
-    asignado: 'Juan Perez',
-    comentarios: 'Sin comentarios.',
-    instruccion: 'Revisar el estado del proceso.',
-    documentosRelacionados: 'Documento de referencia: TR-LP-2019'
-  },
-  {
-    id: 2,
-    codigo: 'ATT-DJ-A TR LP 450/2022',
-    descripcion: 'Otro proceso ejemplo descripción.',
-    fechaIngreso: '2024-08-28',
-    fechaLimite: '2024-09-30',
-    asignado: 'Maria Gomez',
-    comentarios: 'Documentación adicional requerida.',
-    instruccion: 'Finalizar revisión.',
-    documentosRelacionados: 'Documento de referencia: TR-LP-2020'
-  },
-  {
-    id: 3,
-    codigo: 'ATT-DJ-A TR LP 451/2022',
-    descripcion: 'Revisión de informes de cumplimiento en áreas rurales.',
-    fechaIngreso: '2024-08-15',
-    fechaLimite: '2024-09-15',
-    asignado: 'Carlos Sanchez',
-    comentarios: 'Pendiente de aprobación por el comité.',
-    instruccion: 'Solicitar revisión por parte del supervisor.',
-    documentosRelacionados: 'Informe complementario: TR-LP-2021'
-  },
-  {
-    id: 4,
-    codigo: 'ATT-DJ-A TR LP 452/2022',
-    descripcion: 'Auditoría interna de servicios de telecomunicaciones 2023.',
-    fechaIngreso: '2024-07-30',
-    fechaLimite: '2024-09-01',
-    asignado: 'Ana Torres',
-    comentarios: 'Requiere validación de datos.',
-    instruccion: 'Enviar datos al departamento de auditoría.',
-    documentosRelacionados: 'Reporte de auditoría 2022: TR-LP-2018'
-  },
-  {
-    id: 5,
-    codigo: 'ATT-DJ-A TR LP 453/2022',
-    descripcion: 'Actualización de regulaciones para operadores de telecomunicaciones.',
-    fechaIngreso: '2024-06-25',
-    fechaLimite: '2024-07-25',
-    asignado: 'Roberto Diaz',
-    comentarios: 'Proceso urgente debido a cambios en la ley.',
-    instruccion: 'Priorizar revisión por el equipo legal.',
-    documentosRelacionados: 'Reglamento vigente: TR-LP-2017'
-  },
-  {
-    id: 6,
-    codigo: 'ATT-DJ-A TR LP 454/2022',
-    descripcion: 'Inspección de estaciones base en zonas urbanas.',
-    fechaIngreso: '2024-05-10',
-    fechaLimite: '2024-06-10',
-    asignado: 'Laura Fernandez',
-    comentarios: 'Informe preliminar recibido.',
-    instruccion: 'Realizar una inspección adicional en las estaciones afectadas.',
-    documentosRelacionados: 'Informe de inspección: TR-LP-2021'
-  }
-  // más documentos...
-];
-
-// Obtiene el parámetro de la URL
+// Obtener el ID desde los parámetros de la URL
 const { id } = Astro.params;
+console.log('ID obtenido de los parámetros:', id); // Verificar el ID
 
-if (!id) {
-  throw new Error("El ID del documento no fue proporcionado.");
+let token = null;
+let proceso = null;
+
+// Intentar obtener el token desde las cookies (establecido por el cliente)
+token = Astro.cookies.get('token');
+console.log('Token antes de enviar:', token, typeof token);; // Verificar si el token está presente
+
+if (token && typeof token === 'object') {
+  token = token.value;  // Extrae el valor del token
 }
 
-// Encuentra el documento correspondiente por su ID
-const documento = procesos.find((p) => p.id === parseInt(id));
+console.log('Token extraído:', token);
+
+if (!token) {
+  console.error('No se ha encontrado un token de autenticación en las cookies.');
+} else {
+  try {
+    // Realizar la solicitud GET con el token
+    const response = await fetch(`http://localhost:5064/api/procesos/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Token formateado:', token);
+    console.log('Id Obtenido:', id);
+    console.log('Respuesta', response.headers)
+    console.log('Estado de la respuesta:', response.status); // Verificar el estado de la respuesta
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error recibido de la API:', errorData); // Verificar los errores recibidos
+      throw new Error('Error al obtener el proceso desde la API');
+    }
+
+    proceso = await response.json();
+    console.log('Proceso obtenido:', proceso); // Verificar los datos del proceso obtenidos
+
+  } catch (error) {
+    console.error('Hubo un problema al obtener los datos del proceso:', error);
+  }
+}
 ---
 
 <Layout title="Documentos">
   <section class="p-5">
-    {documento ? (
+    {proceso ? (
       <Proceso 
-        idDocumento={documento.codigo}
-        fechaIngreso={documento.fechaIngreso}
-        fechaLimite={documento.fechaLimite}
-        asignado={documento.asignado}
-        asunto={documento.descripcion}
-        comentarios={documento.comentarios}
-        instruccion={documento.instruccion}
-        documentosRelacionados={documento.documentosRelacionados}
-        isEdit={true}
+        idDocumento={proceso.infoArchivo}  
+        
+        fechaIngreso={proceso.fechaInicio ? new Date(proceso.fechaInicio).toISOString().split('T')[0] : 'Fecha no disponible'}
+        fechaLimite={proceso.fechaNotificacion ? new Date(proceso.fechaNotificacion).toISOString().split('T')[0] : 'Fecha no disponible'}
+        
+        asignado={'No asignado'}  
+        asunto={proceso.descripcion}  
+        comentarios={'Sin comentarios'}  
+        instruccion={'Sin instrucciones'}  
+        
+        documentosRelacionados={'Documentos se muestran abajo'}
+        isEdit={false}
       />
     ) : (
       <p>No se encontró el documento.</p>
     )}
 
-    <DocumentList client:load/>
-
+    <!-- Pasar el ID al componente DocumentList para obtener los documentos relacionados -->
+    <DocumentList procesoId={id} client:load />
   </section>
 </Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Recuperar el token desde localStorage en el cliente
+    const token = localStorage.getItem('token');
+    console.log('Token recuperado desde localStorage:', token); // Verificar el token en el cliente
+
+    if (!token) {
+      console.error('No se ha encontrado un token de autenticación');
+      return;
+    }
+
+    // Establecer el token como una cookie para que pueda ser utilizado en el servidor
+    document.cookie = `token=${token}; path=/;`;
+    console.log('Token establecido como cookie.'); // Confirmación de que el token se ha guardado como cookie
+  });
+</script>
