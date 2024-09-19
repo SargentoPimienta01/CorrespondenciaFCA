@@ -12,7 +12,7 @@ let proceso = null;
 
 // Intentar obtener el token desde las cookies (establecido por el cliente)
 token = Astro.cookies.get('token');
-console.log('Token antes de enviar:', token, typeof token);; // Verificar si el token está presente
+console.log('Token antes de enviar:', token, typeof token); // Verificar si el token está presente
 
 if (token && typeof token === 'object') {
   token = token.value;  // Extrae el valor del token
@@ -34,7 +34,7 @@ if (!token) {
 
     console.log('Token formateado:', token);
     console.log('Id Obtenido:', id);
-    console.log('Respuesta', response.headers)
+    console.log('Respuesta', response.headers);
     console.log('Estado de la respuesta:', response.status); // Verificar el estado de la respuesta
 
     if (!response.ok) {
@@ -43,7 +43,8 @@ if (!token) {
       throw new Error('Error al obtener el proceso desde la API');
     }
 
-    proceso = await response.json();
+    const result = await response.json();
+    proceso = result.data.proceso;  // Acceder correctamente a `data.proceso`
     console.log('Proceso obtenido:', proceso); // Verificar los datos del proceso obtenidos
 
   } catch (error) {
@@ -94,3 +95,4 @@ if (!token) {
     console.log('Token establecido como cookie.'); // Confirmación de que el token se ha guardado como cookie
   });
 </script>
+
