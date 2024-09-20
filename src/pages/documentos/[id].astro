@@ -7,6 +7,7 @@ console.log('ID obtenido de los parámetros:', id); // Verificar el ID
 
 let token = null;
 let documento = null;
+let encargado = null; // Nueva variable para almacenar los datos del encargado
 
 // Intentar obtener el token desde las cookies (establecido por el cliente)
 token = Astro.cookies.get('token');
@@ -22,7 +23,7 @@ if (!token) {
   console.error('No se ha encontrado un token de autenticación en las cookies.');
 } else {
   try {
-    // Realizar la solicitud GET con el token
+    // Realizar la solicitud GET para obtener el documento
     const response = await fetch(`http://localhost:5064/api/documentos/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -42,11 +43,31 @@ if (!token) {
     }
 
     const result = await response.json();
-    documento = result.data.documento; // Aquí extraemos el documento del objeto `data`
+    documento = result.data.documento;  // Acceder correctamente a `data.documento`
     console.log('Documento obtenido:', documento); // Verificar los datos del documento obtenidos
 
+    // Realizar otra solicitud para obtener los datos del encargado si el idEncargado está presente
+    if (documento.idEncargado) {
+      const responseEncargado = await fetch(`http://localhost:5064/api/usuarios/${documento.idEncargado}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!responseEncargado.ok) {
+        const errorData = await responseEncargado.json();
+        console.error('Error recibido de la API (Encargado):', errorData); // Verificar los errores recibidos
+        throw new Error('Error al obtener el encargado desde la API');
+      }
+
+      const resultEncargado = await responseEncargado.json();
+      encargado = resultEncargado.data.usuario;  // Acceder a los datos del encargado
+      console.log('Encargado obtenido:', encargado); // Verificar los datos del encargado obtenidos
+    }
+
   } catch (error) {
-    console.error('Hubo un problema al obtener los datos del documento:', error);
+    console.error('Hubo un problema al obtener los datos del documento o encargado:', error);
   }
 }
 ---
@@ -65,17 +86,17 @@ if (!token) {
 
           <div class="col-span-2 sm:col-span-1">
             <label class="block text-sm font-medium text-gray-700">Fecha de Recepción FCA</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{new Date(documento.fechaRecepcionFca).toLocaleString()}</div>
+            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fechaRecepcionFca}</div>
           </div>
 
           <div class="col-span-2 sm:col-span-1">
             <label class="block text-sm font-medium text-gray-700">Fecha de Entrega</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{new Date(documento.fechaEntrega).toLocaleString()}</div>
+            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fechaEntrega}</div>
           </div>
 
           <div class="col-span-2 sm:col-span-1">
             <label class="block text-sm font-medium text-gray-700">Fecha Plazo</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{new Date(documento.fechaPlazo).toLocaleString()}</div>
+            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fechaPlazo}</div>
           </div>
 
           <div class="col-span-2">
@@ -95,17 +116,22 @@ if (!token) {
 
           <div class="col-span-2 sm:col-span-1">
             <label class="block text-sm font-medium text-gray-700">Encargado</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.idEncargado}</div>
+            <div class="mt-1 p-2 border border-gray-300 rounded-md">{encargado ? encargado.nombre : 'No disponible'}</div>
           </div>
         </div>
 
-        <div class="mt-5">
-          <button class="bg-blue-500 text-white px-4 py-2 rounded">Editar Documento</button>
-        </div>
+        <button 
+          class = "bg-azul text-white px-4 py-2 rounded cursor-pointer mr-5 transform hover:bg-amarillo hover:scale-105 transition-colors duration-300 ease-in-out"
+        >
+          Editar Documento
+        </button>
       </div>
     ) : (
       <p>No se encontró el documento.</p>
     )}
+
+    
+
   </main>
 </Layout>
 

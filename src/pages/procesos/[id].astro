@@ -57,17 +57,12 @@ if (!token) {
   <section class="p-5">
     {proceso ? (
       <Proceso 
-        idDocumento={proceso.infoArchivo}  
-        
-        fechaIngreso={proceso.fechaInicio ? new Date(proceso.fechaInicio).toISOString().split('T')[0] : 'Fecha no disponible'}
-        fechaLimite={proceso.fechaNotificacion ? new Date(proceso.fechaNotificacion).toISOString().split('T')[0] : 'Fecha no disponible'}
-        
-        asignado={'No asignado'}  
-        asunto={proceso.descripcion}  
-        comentarios={'Sin comentarios'}  
-        instruccion={'Sin instrucciones'}  
-        
-        documentosRelacionados={'Documentos se muestran abajo'}
+        idProceso={proceso.idProceso}  
+        fechaInicio={proceso.fechaInicio ? new Date(proceso.fechaInicio).toISOString().split('T')[0] : 'Fecha no disponible'}
+        fechaNotificacion={proceso.fechaNotificacion ? new Date(proceso.fechaNotificacion).toISOString().split('T')[0] : 'Fecha no disponible'}
+        descripcion={proceso.descripcion}  
+        infoArchivo={proceso.infoArchivo}
+       
         isEdit={false}
       />
     ) : (
@@ -95,4 +90,3 @@ if (!token) {
     console.log('Token establecido como cookie.'); // Confirmación de que el token se ha guardado como cookie
   });
 </script>
-

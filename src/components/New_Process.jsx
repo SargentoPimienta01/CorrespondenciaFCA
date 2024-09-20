@@ -1,25 +1,21 @@
 import React, { useState } from 'react';
 
 const NewProcessForm = ({
-  idDocumento = '',
-  fechaIngreso = '',
-  fechaLimite = '',
-  asignado = '',
-  asunto = '',
-  documentosRelacionados = '',
-  comentarios = '',
-  instruccion = '',
-  isEdit = false
+  idProceso = '', // ID único del proceso
+  fechaInicio = '', // Fecha de inicio del proceso
+  fechaActualizacion = '', // Fecha de la última actualización
+  fechaNotificacion = '', // Fecha de notificación
+  descripcion = '', // Descripción del proceso (Asunto)
+  infoArchivo = '', // Archivo relacionado
+  isEdit = false // Si se está editando un proceso existente
 }) => {
   const [formData, setFormData] = useState({
-    idDocumento,
-    fechaIngreso,
-    fechaLimite,
-    asignado,
-    asunto,
-    documentosRelacionados,
-    comentarios,
-    instruccion
+    idProceso,
+    fechaInicio: fechaInicio ? new Date(fechaInicio).toISOString().split('T')[0] : '', // Formato de fecha
+    fechaActualizacion: fechaActualizacion ? new Date(fechaActualizacion).toISOString().split('T')[0] : '', // Formato de fecha
+    fechaNotificacion: fechaNotificacion ? new Date(fechaNotificacion).toISOString().split('T')[0] : '',
+    descripcion, // El campo de descripción
+    infoArchivo, // Archivo relacionado
   });
 
   const handleInputChange = (e) => {
@@ -40,8 +36,8 @@ const NewProcessForm = ({
 
     try {
       const url = isEdit
-        ? `http://localhost:5064/api/procesos/${formData.idDocumento}`
-        : 'http://localhost:5064/api/procesos';
+        ? `http://localhost:5064/api/procesos/${formData.idProceso}` // Si es edición
+        : 'http://localhost:5064/api/procesos'; // Si es nuevo
       const method = isEdit ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -50,7 +46,14 @@ const NewProcessForm = ({
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          idProceso: formData.idProceso,
+          fechaInicio: formData.fechaInicio,
+          fechaActualizacion: formData.fechaActualizacion,
+          fechaNotificacion: formData.fechaNotificacion,
+          descripcion: formData.descripcion,
+          infoArchivo: formData.infoArchivo,
+        })
       });
 
       if (!response.ok) {
@@ -59,7 +62,7 @@ const NewProcessForm = ({
 
       const result = await response.json();
       console.log('Proceso enviado:', result);
-      // Aquí puedes redirigir al usuario o mostrar un mensaje de éxito
+      alert(isEdit ? 'Proceso actualizado correctamente' : 'Proceso creado correctamente');
 
     } catch (error) {
       console.error('Hubo un problema al enviar los datos del proceso:', error);
@@ -71,26 +74,26 @@ const NewProcessForm = ({
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="idDocumento">ID del Documento (Nombre Único)</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="idProceso">ID del Proceso</label>
             <input
               type="text"
-              name="idDocumento"
-              id="idDocumento"
+              name="idProceso"
+              id="idProceso"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.idDocumento}
+              value={formData.idProceso}
               onChange={handleInputChange}
               readOnly={isEdit} // Si es edición, el ID es solo lectura
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="asignado">Asignado</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="infoArchivo">Información del Archivo</label>
             <input
               type="text"
-              name="asignado"
-              id="asignado"
+              name="infoArchivo"
+              id="infoArchivo"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.asignado}
+              value={formData.infoArchivo}
               onChange={handleInputChange}
             />
           </div>
@@ -98,76 +101,52 @@ const NewProcessForm = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="fechaIngreso">Fecha de Ingreso</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="fechaInicio">Fecha de Inicio</label>
             <input
               type="date"
-              name="fechaIngreso"
-              id="fechaIngreso"
+              name="fechaInicio"
+              id="fechaInicio"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.fechaIngreso}
+              value={formData.fechaInicio}
               onChange={handleInputChange}
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="fechaLimite">Fecha Límite</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="fechaNotificacion">Fecha de Notificación</label>
             <input
               type="date"
-              name="fechaLimite"
-              id="fechaLimite"
+              name="fechaNotificacion"
+              id="fechaNotificacion"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.fechaLimite}
+              value={formData.fechaNotificacion}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="fechaActualizacion">Fecha de Actualización</label>
+            <input
+              type="date"
+              name="fechaActualizacion"
+              id="fechaActualizacion"
+              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
+              value={formData.fechaActualizacion}
               onChange={handleInputChange}
             />
           </div>
         </div>
 
         <div className="mb-4">
-          <label className="text-sm font-semibold mb-2" htmlFor="asunto">Asunto</label>
+          <label className="text-sm font-semibold mb-2" htmlFor="descripcion">Descripción</label>
           <textarea
-            name="asunto"
-            id="asunto"
+            name="descripcion"
+            id="descripcion"
             rows="3"
             className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
-            value={formData.asunto}
-            onChange={handleInputChange}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="documentosRelacionados">Documentos Relacionados</label>
-            <textarea
-              name="documentosRelacionados"
-              id="documentosRelacionados"
-              rows="3"
-              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.documentosRelacionados}
-              onChange={handleInputChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="instruccion">Instrucción</label>
-            <textarea
-              name="instruccion"
-              id="instruccion"
-              rows="3"
-              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.instruccion}
-              onChange={handleInputChange}
-            />
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="text-sm font-semibold mb-2" htmlFor="comentarios">Comentarios</label>
-          <textarea
-            name="comentarios"
-            id="comentarios"
-            rows="4"
-            className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
-            value={formData.comentarios}
+            value={formData.descripcion}
             onChange={handleInputChange}
           />
         </div>
@@ -186,3 +165,4 @@ const NewProcessForm = ({
 };
 
 export default NewProcessForm;
+
