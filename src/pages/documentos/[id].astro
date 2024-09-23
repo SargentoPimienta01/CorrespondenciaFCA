@@ -121,10 +121,14 @@ if (!token) {
         </div>
 
         <button 
-          class = "bg-azul text-white px-4 py-2 rounded cursor-pointer mr-5 transform hover:bg-amarillo hover:scale-105 transition-colors duration-300 ease-in-out"
+          class = "bg-azul text-white px-6 py-3 mt-5 rounded-lg cursor-pointer transform hover:bg-amarillo hover:scale-105 transition-all duration-300"
         >
           Editar Documento
         </button>
+        <div class="message-container mt-10">
+          <h2 class="message-text">¡Cada documento cuenta! 📄</h2>
+          <p class="message-subtext">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
+        </div>
       </div>
     ) : (
       <p>No se encontró el documento.</p>
@@ -158,5 +162,29 @@ if (!token) {
   }
   .block {
     margin-bottom: 0.5rem;
+  }
+
+  /* Estilo del botón para un mejor espaciado y efecto */
+  button {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .message-container {
+    margin-top: 40px;
+    text-align: center;
+    padding: 20px;
+    background-color: #F9B818;
+    border-radius: 12px;
+  }
+
+  .message-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffffff;
+  }
+
+  .message-subtext {
+    font-size: 1.2rem;
+    color: #ffffff;
   }
 </style>
