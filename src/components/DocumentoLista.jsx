@@ -73,6 +73,24 @@ const DocumentList = () => {
   if (loading) return <div>Cargando documentos...</div>;
   if (error) return <div>Error: {error}</div>;
 
+  const getDocumentColor = (fechaPlazo, estado) => {
+    const today = new Date();
+    const deadline = new Date(fechaPlazo);
+    const differenceInDays = (deadline - today) / (1000 * 3600 * 24);
+
+    if (estado === 'concluido') {
+      return 'bg-green-500'; // Proceso concluido (verde)
+    } else if (differenceInDays < 0) {
+      return 'bg-black'; // Plazo vencido (negro)
+    } else if (differenceInDays <= 2) {
+      return 'bg-red-500'; // Plazo por vencerse (rojo)
+    } else if (differenceInDays <= 7) {
+      return 'bg-orange-500'; // Plazo entre 2 días y una semana (naranja)
+    } else {
+      return 'bg-gray-200'; // Plazo mayor a una semana (gris predeterminado)
+    }
+  };
+
   return (
     <div className="p-5">
       <div className="flex justify-between items-center mb-5">
@@ -105,7 +123,7 @@ const DocumentList = () => {
         {filteredDocuments.map(documento => (
           <div
             key={documento.idDocumento}
-            className="bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer"
+            className={`transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer ${getDocumentColor(documento.fechaPlazo, documento.estado)}`}
             onClick={() => handleDocumentClick(documento.idDocumento)}
           >
             <div className="p-4">
