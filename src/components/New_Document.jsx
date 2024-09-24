@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
-// Este componente necesita que se le pase una lista de encargados desde el servidor
 const NewDocumentForm = ({ usuarios }) => {
   const [formData, setFormData] = useState({
-    codigo_doc: '',
-    fecha_recepcion_fca: '',
-    fecha_entrega: '',
-    fecha_plazo: '',
-    asunto_doc: '',
+    codigoDoc: '',
+    fechaRecepcionFca: '',
+    fechaEntrega: '',
+    fechaPlazo: '',
+    asuntoDoc: '',
     observaciones: '',
-    tipo_documento: '',
-    id_encargado: usuarios[0]?.id_usuario || ''
+    tipoDocumento: '',
+    ultimaVersion: 1,  // Por defecto, versión inicial
+    idEncargado: usuarios[0]?.idUsuario || '' // Selecciona el primer usuario como encargado por defecto
   });
 
   const handleInputChange = (e) => {
@@ -20,14 +21,30 @@ const NewDocumentForm = ({ usuarios }) => {
     });
   };
 
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return d.toISOString();  // Aseguramos que la fecha esté bien formateada
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Se ha ejecutado handleSubmit");
 
-    const token = localStorage.getItem('token'); // Obtener el token del almacenamiento local
+    const token = localStorage.getItem('token');
     if (!token) {
       console.error('No se ha encontrado un token de autenticación');
       return;
     }
+
+    // Formatear las fechas a ISO 8601
+    const formattedData = {
+      ...formData,
+      fechaRecepcionFca: formatDate(formData.fechaRecepcionFca),
+      fechaEntrega: formatDate(formData.fechaEntrega),
+      fechaPlazo: formatDate(formData.fechaPlazo),
+    };
+
+    console.log('Datos que se enviarán:', JSON.stringify(formattedData, null, 2));
 
     try {
       const response = await fetch('http://localhost:5064/api/documentos', {
@@ -36,8 +53,10 @@ const NewDocumentForm = ({ usuarios }) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData), // Enviamos los datos del formulario como JSON
+        body: JSON.stringify(formattedData),
       });
+
+      console.log("Se envió la solicitud");
 
       if (!response.ok) {
         throw new Error('Error al registrar el documento');
@@ -45,10 +64,10 @@ const NewDocumentForm = ({ usuarios }) => {
 
       const result = await response.json();
       console.log('Nuevo documento creado:', result);
-      // Aquí puedes agregar alguna lógica para mostrar un mensaje de éxito o redirigir a otra página
-
+      Swal.fire('Éxito', 'Documento registrado con éxito', 'success');
     } catch (error) {
       console.error('Hubo un problema al registrar el documento:', error);
+      Swal.fire('Error', 'Hubo un problema al registrar el documento', 'error');
     }
   };
 
@@ -57,29 +76,29 @@ const NewDocumentForm = ({ usuarios }) => {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="codigo_doc">Código del Documento</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="codigoDoc">Código del Documento</label>
             <input
               type="text"
-              name="codigo_doc"
-              id="codigo_doc"
+              name="codigoDoc"
+              id="codigoDoc"
               required
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.codigo_doc}
+              value={formData.codigoDoc}
               onChange={handleInputChange}
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="id_encargado">Encargado</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="idEncargado">Encargado</label>
             <select
-              name="id_encargado"
-              id="id_encargado"
+              name="idEncargado"
+              id="idEncargado"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.id_encargado}
+              value={formData.idEncargado}
               onChange={handleInputChange}
             >
               {usuarios.map((usuario) => (
-                <option key={usuario.id_usuario} value={usuario.id_usuario}>
+                <option key={usuario.idUsuario} value={usuario.idUsuario}>
                   {usuario.nombre}
                 </option>
               ))}
@@ -89,25 +108,25 @@ const NewDocumentForm = ({ usuarios }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="fecha_recepcion_fca">Fecha de Recepción FCA</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="fechaRecepcionFca">Fecha de Recepción FCA</label>
             <input
               type="date"
-              name="fecha_recepcion_fca"
-              id="fecha_recepcion_fca"
+              name="fechaRecepcionFca"
+              id="fechaRecepcionFca"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.fecha_recepcion_fca}
+              value={formData.fechaRecepcionFca}
               onChange={handleInputChange}
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="fecha_entrega">Fecha de Entrega</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="fechaEntrega">Fecha de Entrega</label>
             <input
               type="date"
-              name="fecha_entrega"
-              id="fecha_entrega"
+              name="fechaEntrega"
+              id="fechaEntrega"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.fecha_entrega}
+              value={formData.fechaEntrega}
               onChange={handleInputChange}
             />
           </div>
@@ -115,24 +134,24 @@ const NewDocumentForm = ({ usuarios }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="fecha_plazo">Fecha Límite</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="fechaPlazo">Fecha Límite</label>
             <input
               type="date"
-              name="fecha_plazo"
-              id="fecha_plazo"
+              name="fechaPlazo"
+              id="fechaPlazo"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.fecha_plazo}
+              value={formData.fechaPlazo}
               onChange={handleInputChange}
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="tipo_documento">Tipo de Documento</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="tipoDocumento">Tipo de Documento</label>
             <select
-              name="tipo_documento"
-              id="tipo_documento"
+              name="tipoDocumento"
+              id="tipoDocumento"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.tipo_documento}
+              value={formData.tipoDocumento}
               onChange={handleInputChange}
             >
               <option value="">Seleccione un tipo</option>
@@ -146,13 +165,13 @@ const NewDocumentForm = ({ usuarios }) => {
         </div>
 
         <div className="mb-4">
-          <label className="text-sm font-semibold mb-2" htmlFor="asunto_doc">Asunto</label>
+          <label className="text-sm font-semibold mb-2" htmlFor="asuntoDoc">Asunto</label>
           <textarea
-            name="asunto_doc"
-            id="asunto_doc"
+            name="asuntoDoc"
+            id="asuntoDoc"
             rows="3"
             className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
-            value={formData.asunto_doc}
+            value={formData.asuntoDoc}
             onChange={handleInputChange}
           />
         </div>
@@ -170,16 +189,16 @@ const NewDocumentForm = ({ usuarios }) => {
         </div>
 
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-semibold">Subir Documento</label>
-            <input type="file" className="text-sm" />
-          </div>
           <button
             type="submit"
             className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
           >
             Registrar Documento
           </button>
+        </div>
+        <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">
+          <h2 className="text-2xl font-bold text-white">¡Cada documento cuenta! 📄</h2>
+          <p className="text-lg text-white">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
         </div>
       </form>
     </div>
