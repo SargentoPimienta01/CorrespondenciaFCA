@@ -27,8 +27,8 @@ const DocumentList = () => {
         const response = await fetch('http://localhost:5064/api/documentos', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,  // Enviar el token JWT en el encabezado
-            'Content-Type': 'application/json',  // Asegúrate de establecer el tipo de contenido
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           }
         });
 
@@ -39,19 +39,18 @@ const DocumentList = () => {
         const result = await response.json();
         console.log('Documentos obtenidos:', result);
 
-        // Verifica si data.documentos es un array antes de tratar de usarlo
         if (result.data && Array.isArray(result.data.documentos)) {
-          setDocuments(result.data.documentos);  // Establecer los documentos obtenidos
-          setFilteredDocuments(result.data.documentos);  // Inicialmente, muestra todos los documentos
+          setDocuments(result.data.documentos);
+          setFilteredDocuments(result.data.documentos);
         } else {
           throw new Error('La API no devolvió un array de documentos');
         }
 
-        setLoading(false); // Detener la carga
+        setLoading(false);
       } catch (error) {
         setError(error.message);
         console.error('Error al obtener los documentos:', error.message);
-        setLoading(false); // Detener la carga incluso en caso de error
+        setLoading(false);
       }
     };
 
@@ -70,32 +69,40 @@ const DocumentList = () => {
     window.location.href = `/documentos/${documentoId}`;
   };
 
-  if (loading) return <div>Cargando documentos...</div>;
-  if (error) return <div>Error: {error}</div>;
-
+  // Función que asigna la clase CSS según la fechaPlazo y el estado
   const getDocumentColor = (fechaPlazo, estado) => {
     const today = new Date();
     const deadline = new Date(fechaPlazo);
     const differenceInDays = (deadline - today) / (1000 * 3600 * 24);
 
     if (estado === 'concluido') {
-      return 'bg-green-500'; // Proceso concluido (verde)
+      return { color: 'bg-green-500', importance: 5 }; // Menor importancia
     } else if (differenceInDays < 0) {
-      return 'bg-black'; // Plazo vencido (negro)
+      return { color: 'bg-slate-400', importance: 1 }; // Mayor importancia
     } else if (differenceInDays <= 2) {
-      return 'bg-red-500'; // Plazo por vencerse (rojo)
+      return { color: 'bg-red-300', importance: 2 }; // Alta importancia
     } else if (differenceInDays <= 7) {
-      return 'bg-orange-500'; // Plazo entre 2 días y una semana (naranja)
+      return { color: 'bg-orange-300', importance: 3 }; // Media importancia
     } else {
-      return 'bg-gray-200'; // Plazo mayor a una semana (gris predeterminado)
+      return { color: 'bg-gray-200', importance: 4 }; // Menor importancia
     }
   };
+
+  // Ordenar documentos por importancia
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
+    const aColor = getDocumentColor(a.fechaPlazo, a.estado);
+    const bColor = getDocumentColor(b.fechaPlazo, b.estado);
+    return aColor.importance - bColor.importance; // Ordena según la importancia
+  });
+
+  if (loading) return <div>Cargando documentos...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="p-5">
       <div className="flex justify-between items-center mb-5">
         <a href="/nuevo-documento" className="hover:no-underline">
-          <button 
+          <button
             className="bg-azul text-white px-4 py-2 rounded cursor-pointer mr-5 transform hover:bg-amarillo hover:scale-105 transition-colors duration-300 ease-in-out"
           >
             + Añadir Documento
@@ -110,35 +117,38 @@ const DocumentList = () => {
           className="flex-1 px-2 py-1 border border-black rounded"
           onChange={(e) => filterDocuments(e.target.value)}
         />
-        <button 
+        <button
           id="buscar-btn"
           name="buscar"
-          className="bg-transparent border-none cursor-pointer ml-2" 
+          className="bg-transparent border-none cursor-pointer ml-2"
         >
           <Search className="text-black w-5 h-5" />
         </button>
       </div>
 
       <div className="flex flex-col gap-3">
-        {filteredDocuments.map(documento => (
-          <div
-            key={documento.idDocumento}
-            className={`transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer ${getDocumentColor(documento.fechaPlazo, documento.estado)}`}
-            onClick={() => handleDocumentClick(documento.idDocumento)}
-          >
-            <div className="p-4">
-              <a href={`/documentos/${documento.idDocumento}`} className="hover:text-azul hover:no-underline" >
-                <div className="flex justify-between w-full mb-2">
-                  <span className="text-lg font-bold text-gray-800">{documento.codigoDoc}</span>
-                  <span className="text-sm text-gray-500">{documento.fechaRecepcionFca}</span>
-                </div>
-                <div className="text-gray-600">
-                  {documento.asuntoDoc}
-                </div>
-              </a>
-            </div>            
-          </div>
-        ))}
+        {sortedDocuments.map(documento => {
+          const { color } = getDocumentColor(documento.fechaPlazo, documento.estado);
+          return (
+            <div
+              key={documento.idDocumento}
+              className={`transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer ${color}`}
+              onClick={() => handleDocumentClick(documento.idDocumento)}
+            >
+              <div className="p-4">
+                <a href={`/documentos/${documento.idDocumento}`} className="hover:text-azul hover:no-underline">
+                  <div className="flex justify-between w-full mb-2">
+                    <span className="text-lg font-bold text-gray-800">{documento.codigoDoc}</span>
+                    <span className="text-sm text-gray-500">{documento.fechaRecepcionFca}</span>
+                  </div>
+                  <div className="text-gray-600">
+                    {documento.asuntoDoc}
+                  </div>
+                </a>
+              </div>
+            </div>
+          );
+        })}
         <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">
           <h2 className="text-2xl font-bold text-white">¡Cada documento cuenta! 📄</h2>
           <p className="text-lg text-white">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
@@ -147,6 +157,5 @@ const DocumentList = () => {
     </div>
   );
 };
-
 
 export default DocumentList;
