@@ -2,13 +2,53 @@
 import Correspondencia from "../layouts/Correspondencia.astro"
 import DocumentoNuevo from "../components/New_Document"
 
-const usuarios = [
-  { id_usuario: 1, nombre: 'Juan Carlos Villaroel' },
-  { id_usuario: 2, nombre: 'Mariel Villamizar' },
-  { id_usuario: 3, nombre: 'Luis Predrazas' },
-  { id_usuario: 4, nombre: 'Oscar Uria' },
-  { id_usuario: 5, nombre: 'Carlos Lopez' }
-];
+// Obtener el ID del documento desde los parámetros de la URL (si es necesario)
+const { id } = Astro.params;
+console.log('ID obtenido de los parámetros:', id); // Verificar el ID
+
+let token = null;
+let usuarios = [];
+
+// Intentar obtener el token desde las cookies (establecido por el cliente)
+token = Astro.cookies.get('token');
+console.log('Token antes de enviar:', token, typeof token); // Verificar si el token está presente
+
+if (token && typeof token === 'object') {
+  token = token.value;  // Extrae el valor del token
+}
+
+console.log('Token extraído:', token);
+
+if (!token) {
+  console.error('No se ha encontrado un token de autenticación en las cookies.');
+} else {
+  try {
+    // Realizar la solicitud GET para obtener los usuarios desde la API
+    const response = await fetch(`http://localhost:5064/api/usuarios`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Token formateado:', token);
+    console.log('Respuesta', response.headers);
+    console.log('Estado de la respuesta:', response.status); // Verificar el estado de la respuesta
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error recibido de la API:', errorData); // Verificar los errores recibidos
+      throw new Error('Error al obtener los usuarios desde la API');
+    }
+
+    const result = await response.json();
+    usuarios = result.data.usuarios;  // Asegúrate de que la API devuelve usuarios correctamente
+    console.log('Usuarios obtenidos:', usuarios); // Verificar los datos obtenidos
+
+  } catch (error) {
+    console.error('Hubo un problema al obtener los datos de los usuarios:', error);
+  }
+}
 ---
 
 <Correspondencia title="Seguimiento de Procesos ATT">
@@ -16,14 +56,18 @@ const usuarios = [
 	  <h1>NUEVO DOCUMENTO ATT</h1>
 	</div>
   
-	<!-- Renderizar la lista de procesos -->
-	<DocumentoNuevo usuarios={usuarios}/>
-  </Correspondencia>
-  
-  <style is:global>
+	<!-- Solo renderiza el componente si los usuarios están disponibles -->
+	{usuarios && usuarios.length > 0 ? (
+	  <DocumentoNuevo usuarios={usuarios} />
+	) : (
+	  <p>No se encontraron usuarios. Verifica que la API esté respondiendo correctamente.</p>
+	)}
+</Correspondencia>
+
+<style is:global>
 	.title {
 	  text-align: center;
 	  font-size: 40px;
 	  font-weight: bold;
 	}
-  </style>
+</style>

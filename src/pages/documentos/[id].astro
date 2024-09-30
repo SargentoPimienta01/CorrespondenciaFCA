@@ -27,6 +27,7 @@ if (!token) {
   try {
     // Realizar la solicitud GET para obtener el documento
     const response = await fetch(`http://localhost:5064/api/documentos/${id}`, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

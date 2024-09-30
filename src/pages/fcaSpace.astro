@@ -1,15 +1,21 @@
 ---
 import Correspondencia from "../layouts/Correspondencia.astro"
 import ProcesoLista from "../components/ProcesoLista"
+import ProtectedRoute from "../components/ProtectedRoute";
+import AuthProvider from "../components/AuthProvider";
 ---
 
 <Correspondencia title="Seguimiento de Procesos ATT">
 	<div class="title">
 	  <h1>SEGUIMIENTO - PROCESOS ATT</h1>
 	</div>
-  
-	<!-- Renderizar la lista de procesos -->
-	<ProcesoLista client:load />
+	
+	<AuthProvider>
+	<ProtectedRoute client:only="react">
+		<!-- Renderizar la lista de procesos -->
+		<ProcesoLista client:load />
+	</ProtectedRoute>
+	</AuthProvider>
   </Correspondencia>
   
   <style is:global>
