@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Logo from '../icons/logo.astro'
-import Card from '../components/Card.astro'
 ---
 <Layout title="Iniciar sesión">
     <main>
@@ -10,8 +9,8 @@ import Card from '../components/Card.astro'
             <form method="get">
             <h1>Inicio de Sesión</h1>
             <div class="form-container">
-                <input type="text" required placeholder="Correo Electronico"  name= "cuenta" class="account-input">
-                <input type="password" required placeholder="Contraseña" name= "password" class="password-input">
+                <input type="text" required placeholder="Correo Electronico" name="cuenta" class="account-input">
+                <input type="password" required placeholder="Contraseña" name="password" class="password-input">
                 <div class="button-container">
                     <button class="login-button">Ingresar</button>
                 </div>
@@ -61,18 +60,22 @@ import Card from '../components/Card.astro'
                 const responseData = await response.json();
                 console.log(responseData);
 
-                // Almacenar el token JWT tanto en localStorage como en cookies
-                const token = responseData.data.token;
-                const expiryTime = new Date().getTime() + 3600000; // 1 hora de expiración
+                // Verificar si la respuesta tiene un token
+                if (!responseData.data || !responseData.data.token) {
+                    throw new Error('Token de autenticación no recibido');
+                }
 
-                // Guardar en localStorage
-                localStorage.setItem('token', token);
-                localStorage.setItem('expiry', expiryTime.toString());
+                // Almacenar el token JWT en las cookies manualmente
+                const token = responseData.data.token;
+                const expiryTime = 3600; // Expira en 1 hora (3600 segundos)
 
                 // Guardar el token en las cookies
-                document.cookie = `token=${token}; max-age=3600; path=/;`;
+                document.cookie = `token=${token}; max-age=${expiryTime}; path=/;`;
 
-                // Redirigir al espacio FCA o al panel de control
+                // Confirmar que el token se ha guardado correctamente
+                console.log('Token guardado en las cookies:', document.cookie);
+
+                // Redirigir al espacio FCA o al panel de control solo si todo es exitoso
                 window.location.href = '/fcaSpace';
             } catch (error) {
                 console.error('Error al autenticar con la API:', error);
@@ -81,6 +84,7 @@ import Card from '../components/Card.astro'
         });
     });
 </script>
+
 
 <style>
     main {
@@ -116,20 +120,20 @@ import Card from '../components/Card.astro'
         font-size: 1rem;
     }
 
-	.account-input{
-		background: #fff;
-	}
+    .account-input {
+        background: #fff;
+    }
 
     .button-container {
         display: flex;
         flex-direction: column;
         gap: 0;
-		align-items: center;
+        align-items: center;
         margin-top: 1rem;
     }
 
     .login-button {
-		width: 100%;
+        width: 100%;
         max-width: 300px;
         padding: 1rem 2rem;
         font-size: 1.5rem;
@@ -143,7 +147,6 @@ import Card from '../components/Card.astro'
 
     .login-button:hover {
         background-color: #fbfbfb;
-		color: #1F284C;
+        color: #1F284C;
     }
 </style>
-

@@ -16,46 +16,98 @@ const DocumentList = () => {
   const [loading, setLoading] = useState(true); // Estado para manejar la carga
   const [error, setError] = useState(null); // Estado para manejar errores
 
+  // Función para extraer el token de la cookie
+  const getTokenFromCookie = () => {
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+    if (tokenCookie) {
+      return tokenCookie.split('=')[1].trim();  // Asegúrate de eliminar cualquier espacio adicional
+    }
+    return null;  // Retornar null si no se encuentra la cookie
+  };
+
+  // Función para extraer la expiración del token de la cookie
+  const getExpiryFromCookie = () => {
+    const cookies = document.cookie.split(';');
+    const expiryCookie = cookies.find(cookie => cookie.trim().startsWith('expiry='));
+    if (expiryCookie) {
+      return expiryCookie.split('=')[1].trim();  // Extraer la expiración
+    }
+    return null;  // Retornar null si no se encuentra la cookie de expiración
+  };
+
+  // Función para eliminar el token y la expiración de la cookie (logout)
+  const deleteTokenAndExpiryFromCookie = () => {
+    document.cookie = 'token=; Max-Age=0; path=/;';
+    document.cookie = 'expiry=; Max-Age=0; path=/;';
+  };
+
+  // Función para verificar si el token ha expirado
+  const checkTokenExpiry = () => {
+    const expiryTime = getExpiryFromCookie();
+    if (!expiryTime) return false; // Si no hay una cookie de expiración, consideramos que no hay expiración
+
+    const expiryDate = new Date(parseInt(expiryTime, 10)); // Convertir la expiración en una fecha
+    const now = new Date();
+
+    if (expiryDate.getTime() < now.getTime()) {
+      console.log('Token ha expirado. Redirigiendo al login...');
+      return true;
+    }
+    return false;
+  };
+
   useEffect(() => {
+    const token = getTokenFromCookie();
+    const tokenExpired = checkTokenExpiry();
+
+    console.log('Token extraído de la cookie:', token);
+
+    if (!token || tokenExpired) {
+      console.log('Token no encontrado o expirado.');
+      deleteTokenAndExpiryFromCookie();  // Eliminar el token si está vencido o no se encuentra
+      window.location.href = '/';  // Redirigir al login
+      return;
+    }
+
     const fetchDocuments = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No se ha encontrado un token de autenticación');
-        }
-
+        console.log('Iniciando fetch de documentos...');
         const response = await fetch('http://localhost:5064/api/documentos', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
-          }
+            'Authorization': `Bearer ${token}`,  // Incluir el token extraído en los headers
+          },
         });
 
+        console.log('Estado de respuesta:', response.status);
         if (!response.ok) {
-          throw new Error('Error al obtener los documentos');
+          const errorDetails = await response.text();
+          console.log('Detalles del error:', errorDetails);
+          throw new Error(`Error al obtener los documentos. Status: ${response.status}. Detalles: ${errorDetails}`);
         }
 
         const result = await response.json();
-        console.log('Documentos obtenidos:', result);
+        console.log('Datos obtenidos:', result);
 
         if (result.data && Array.isArray(result.data.documentos)) {
           setDocuments(result.data.documentos);
           setFilteredDocuments(result.data.documentos);
         } else {
-          throw new Error('La API no devolvió un array de documentos');
+          throw new Error('La API no devolvió un array de Documentos');
         }
 
         setLoading(false);
-      } catch (error) {
-        setError(error.message);
-        console.error('Error al obtener los documentos:', error.message);
+      } catch (err) {
+        console.error('Error en la solicitud fetch:', err);
+        setError(err.message);
         setLoading(false);
       }
     };
 
     fetchDocuments();
-  }, []);
+  }, []);  // Ejecutar el useEffect solo una vez
 
   const filterDocuments = (searchTerm) => {
     const filtered = documents.filter(documento =>
