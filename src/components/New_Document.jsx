@@ -1,6 +1,27 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 
+// Función para obtener el token desde las cookies
+const getTokenFromCookie = () => {
+  const cookies = document.cookie.split(';');
+  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+  if (tokenCookie) {
+    return tokenCookie.split('=')[1].trim();
+  }
+  return null;
+};
+
+// Función para eliminar el token
+const deleteToken = () => {
+  document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+};
+
+// Redirigir al login si el token es inválido o no está presente
+const redirectToLogin = () => {
+  deleteToken(); // Eliminar cualquier token existente
+  window.location.href = '/'; // Redirigir al login
+};
+
 const NewDocumentForm = ({ usuarios }) => {
   const [formData, setFormData] = useState({
     codigoDoc: '',
@@ -11,7 +32,7 @@ const NewDocumentForm = ({ usuarios }) => {
     observaciones: '',
     tipoDocumento: '',
     ultimaVersion: 1,
-    idEncargado: usuarios[0]?.id_usuario || ''  // Nota: Cambié idUsuario a id_usuario
+    idEncargado: usuarios[0]?.id_usuario || ''
   });
 
   // Función para manejar cambios en los inputs
@@ -25,14 +46,33 @@ const NewDocumentForm = ({ usuarios }) => {
 
   // Función para manejar el envío del formulario
   const handleSubmit = async () => {
+    console.log("Intentando enviar el formulario..."); // Log para verificar si handleSubmit se ejecuta
+    const token = getTokenFromCookie();
+    
+    if (!token) {
+      Swal.fire({
+        title: 'Error!',
+        text: 'No se encontró el token de autenticación. Redirigiendo al login.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
+      return redirectToLogin();
+    }
+
+    console.log('Enviando datos:', formData); // Log para mostrar los datos que se van a enviar
+    console.log('Token:', token); // Log para mostrar el token
+
     try {
-      const response = await fetch('https://tu-url-de-api.com/documentos', {
+      const response = await fetch('http://localhost:5064/api/documentos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`  // Incluye el token en el header Authorization
         },
         body: JSON.stringify(formData),
       });
+
+      console.log('Estado de la respuesta:', response.status); // Log para verificar el estado de la respuesta
 
       if (response.ok) {
         Swal.fire({
@@ -53,7 +93,17 @@ const NewDocumentForm = ({ usuarios }) => {
           ultimaVersion: 1,
           idEncargado: usuarios[0]?.id_usuario || ''
         });
+      } else if (response.status === 401) {
+        Swal.fire({
+          title: 'Error de Autenticación!',
+          text: 'El token ha expirado. Redirigiendo al login.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+        redirectToLogin();  // Redirigir al login
       } else {
+        const errorResponse = await response.json();
+        console.error('Error en el registro:', errorResponse); // Log para mostrar el error recibido
         Swal.fire({
           title: 'Error!',
           text: 'Ocurrió un error al registrar el documento.',
@@ -62,6 +112,7 @@ const NewDocumentForm = ({ usuarios }) => {
         });
       }
     } catch (error) {
+      console.error('Error de conexión:', error); // Log del error de conexión
       Swal.fire({
         title: 'Error!',
         text: 'No se pudo conectar con el servidor.',
@@ -206,6 +257,14 @@ const NewDocumentForm = ({ usuarios }) => {
         </div>
 
         {/* Mensaje de éxito */}
+        <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">
+          <h2 className="text-2xl font-bold text-white">¡Cada documento cuenta! 📄</h2>
+          <p className="text-lg text-white">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
+        </div>
+        <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">
+          <h2 className="text-2xl font-bold text-white">¡Cada documento cuenta! 📄</h2>
+          <p className="text-lg text-white">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
+        </div>
         <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">
           <h2 className="text-2xl font-bold text-white">¡Cada documento cuenta! 📄</h2>
           <p className="text-lg text-white">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
