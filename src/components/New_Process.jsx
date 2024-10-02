@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
 // Función para obtener el token desde las cookies
 const getTokenFromCookie = () => {
@@ -44,7 +45,12 @@ const NewProcessForm = () => {
 
     const token = getTokenFromCookie();
     if (!token) {
-      console.error('No se ha encontrado un token de autenticación');
+      Swal.fire({
+        title: 'Error!',
+        text: 'No se ha encontrado el token de autenticación. Redirigiendo al login.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
       return redirectToLogin();
     }
 
@@ -72,7 +78,14 @@ const NewProcessForm = () => {
 
       const result = await response.json();
       console.log('Proceso enviado:', result);
-      alert('Proceso creado correctamente');
+
+      // Mostrar alerta de éxito
+      Swal.fire({
+        title: 'Proceso registrado!',
+        text: 'El proceso se ha registrado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      });
 
       // Resetear el formulario
       setFormData({
@@ -85,6 +98,14 @@ const NewProcessForm = () => {
 
     } catch (error) {
       console.error('Hubo un problema al enviar los datos del proceso:', error);
+      
+      // Mostrar alerta de error
+      Swal.fire({
+        title: 'Error!',
+        text: 'Hubo un problema al registrar el proceso.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
     }
   };
 
@@ -175,3 +196,4 @@ const NewProcessForm = () => {
 };
 
 export default NewProcessForm;
+
