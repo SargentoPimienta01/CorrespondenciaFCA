@@ -166,6 +166,10 @@ const NewProcessForm = () => {
           </button>
         </div>
       </form>
+      <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">
+        <h2 className="text-2xl font-bold text-white">¡Cada documento cuenta! 📄</h2>
+        <p className="text-lg text-white">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
+      </div>
     </div>
   );
 };
