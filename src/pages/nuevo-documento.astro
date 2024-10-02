@@ -58,7 +58,7 @@ if (!token) {
   
 	<!-- Solo renderiza el componente si los usuarios están disponibles -->
 	{usuarios && usuarios.length > 0 ? (
-	  <DocumentoNuevo usuarios={usuarios} />
+	  <DocumentoNuevo client:load usuarios={usuarios} />
 	) : (
 	  <p>No se encontraron usuarios. Verifica que la API esté respondiendo correctamente.</p>
 	)}
