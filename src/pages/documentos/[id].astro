@@ -1,202 +1,24 @@
 ---
+import DocumentDetails from '../../components/Edit_Document'
 import Layout from '../../layouts/Correspondencia.astro';
-import NewDocument from '../../components/New_Document';
 
-// Obtener el ID del documento desde los parámetros de la URL
-const { id } = Astro.params;
-console.log('ID obtenido de los parámetros:', id); // Verificar el ID
+const { id } = Astro.params;  // Obtener el ID del documento desde la URL
 
-let token = null;
-let documento = null;
-let encargado = null; // Nueva variable para almacenar los datos del encargado
-let isEditMode = false; // Estado para activar/desactivar la edición
+// let token = Astro.cookies.get('token')?.value;
 
-// Intentar obtener el token desde las cookies (establecido por el cliente)
-token = Astro.cookies.get('token');
-console.log('Token antes de enviar:', token, typeof token); // Verificar si el token está presente
-
-if (token && typeof token === 'object') {
-  token = token.value;  // Extrae el valor del token
-}
-
-console.log('Token extraído:', token);
-
-if (!token) {
-  console.error('No se ha encontrado un token de autenticación en las cookies.');
-} else {
-  try {
-    // Realizar la solicitud GET para obtener el documento
-    const response = await fetch(`http://localhost:5064/api/documentos/${id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    console.log('Token formateado:', token);
-    console.log('Id Obtenido:', id);
-    console.log('Respuesta', response.headers);
-    console.log('Estado de la respuesta:', response.status); // Verificar el estado de la respuesta
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error recibido de la API:', errorData); // Verificar los errores recibidos
-      throw new Error('Error al obtener el documento desde la API');
-    }
-
-    const result = await response.json();
-    documento = result.data.documento;  // Acceder correctamente a `data.documento`
-    console.log('Documento obtenido:', documento); // Verificar los datos del documento obtenidos
-
-    // Realizar otra solicitud para obtener los datos del encargado si el idEncargado está presente
-    if (documento.idEncargado) {
-      const responseEncargado = await fetch(`http://localhost:5064/api/usuarios/${documento.idEncargado}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!responseEncargado.ok) {
-        const errorData = await responseEncargado.json();
-        console.error('Error recibido de la API (Encargado):', errorData); // Verificar los errores recibidos
-        throw new Error('Error al obtener el encargado desde la API');
-      }
-
-      const resultEncargado = await responseEncargado.json();
-      encargado = resultEncargado.data.usuario;  // Acceder a los datos del encargado
-      console.log('Encargado obtenido:', encargado); // Verificar los datos del encargado obtenidos
-    }
-
-  } catch (error) {
-    console.error('Hubo un problema al obtener los datos del documento o encargado:', error);
-  }
-}
+// if (!token) {
+//   throw new Error('No se ha encontrado un token de autenticación en las cookies.');
+// }
 ---
 
-<Layout title={`Detalles del Documento ${documento?.codigoDoc ?? ''}`}>
+<Layout title={`Detalles del Documento ${id ?? ''}`}>
   <main class="p-5">
-    <!-- Verificar si estamos en modo de edición -->
-    {isEditMode ? (
-      <NewDocument
-        idDocumento={documento.codigoDoc}
-        fechaIngreso={documento.fechaRecepcionFca}
-        fechaPlazo={documento.fechaPlazo}
-        asunto={documento.asuntoDoc}
-        observaciones={documento.observaciones}
-        tipoDocumento={documento.tipoDocumento}
-        encargado={encargado ? encargado.nombre : 'No disponible'}
-        isEdit={true}
-      />
-    ) : (
-      <div>
-        <h1 class="text-2xl font-bold mb-5">Detalles del Documento: {documento.codigoDoc}</h1>
-
-        <div class="grid grid-cols-2 gap-5">
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-sm font-medium text-gray-700">ID del Documento</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.codigoDoc}</div>
-          </div>
-
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de Recepción FCA</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fechaRecepcionFca}</div>
-          </div>
-
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha de Entrega</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fechaEntrega}</div>
-          </div>
-
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-sm font-medium text-gray-700">Fecha Plazo</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.fechaPlazo}</div>
-          </div>
-
-          <div class="col-span-2">
-            <label class="block text-sm font-medium text-gray-700">Asunto</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.asuntoDoc}</div>
-          </div>
-
-          <div class="col-span-2">
-            <label class="block text-sm font-medium text-gray-700">Observaciones</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.observaciones}</div>
-          </div>
-
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{documento.tipoDocumento}</div>
-          </div>
-
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-sm font-medium text-gray-700">Encargado</label>
-            <div class="mt-1 p-2 border border-gray-300 rounded-md">{encargado ? encargado.nombre : 'No disponible'}</div>
-          </div>
-        </div>
-
-        <button 
-          onclick={() => (isEditMode = true)}
-          class="bg-azul text-white px-6 py-3 mt-5 rounded-lg cursor-pointer transform hover:bg-amarillo hover:scale-105 transition-all duration-300"
-        >
-          Editar Documento
-        </button>
-
-        <div class="message-container mt-10">
-          <h2 class="message-text">¡Cada documento cuenta! 📄</h2>
-          <p class="message-subtext">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
-        </div>
-      </div>
-    )}
+    {/* Renderizar DocumentDetails pasando solo el idDocumento */}
+    <DocumentDetails
+      idDocumento={id} 
+      client:load
+    />
   </main>
 </Layout>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Recuperar el token desde localStorage en el cliente
-    const token = localStorage.getItem('token');
-    console.log('Token recuperado desde localStorage:', token); // Verificar el token en el cliente
 
-    if (!token) {
-      console.error('No se ha encontrado un token de autenticación');
-      return;
-    }
-
-    // Establecer el token como una cookie para que pueda ser utilizado en el servidor
-    document.cookie = `token=${token}; path=/;`;
-    console.log('Token establecido como cookie.'); // Confirmación de que el token se ha guardado como cookie
-  });
-</script>
-
-<style is:global>
-  body {
-    background-color: #f9f9f9;
-  }
-  .block {
-    margin-bottom: 0.5rem;
-  }
-
-  /* Estilo del botón para un mejor espaciado y efecto */
-  button {
-    transition: all 0.3s ease-in-out;
-  }
-
-  .message-container {
-    margin-top: 40px;
-    text-align: center;
-    padding: 20px;
-    background-color: #F9B818;
-    border-radius: 12px;
-  }
-
-  .message-text {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #ffffff;
-  }
-
-  .message-subtext {
-    font-size: 1.2rem;
-    color: #ffffff;
-  }
-</style>
