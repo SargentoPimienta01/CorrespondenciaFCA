@@ -292,6 +292,12 @@ const EditDocumentForm = ({ idDocumento }) => {
             >
               Actualizar Documento
             </button>
+            <button
+            className="bg-azul text-white px-4 py-2 rounded-md hover:bg-amarillo transition-all"
+            onClick={() => window.location.href = `/documentos/versiones`}
+            >
+              Ver Historial de Versiones
+            </button>
           </div>
         </div>
         <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">

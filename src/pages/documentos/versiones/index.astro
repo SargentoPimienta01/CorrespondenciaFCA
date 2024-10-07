@@ -1,0 +1,12 @@
+---
+import Layout from "../../../layouts/Correspondencia.astro";
+import VersionHistory from "../../../components/VersionHistory";
+
+const { idDocumento } = Astro.params;
+---
+
+<Layout title="Historial de Versiones">
+    <section class="p-5">
+      <VersionHistory idDocumento={idDocumento} client:load/>
+    </section>
+  </Layout>
