@@ -5,26 +5,39 @@ import Swal from 'sweetalert2';
 
 const VersionHistory = ({ idDocumento }) => {
   const [versions, setVersions] = useState([]);
-  const [loading, setLoading] = useState(true); // Estado para manejar la carga
-  const [error, setError] = useState(null); // Estado para manejar errores
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchVersions = async () => {
       try {
-        // Verificación de idDocumento
         if (!idDocumento) {
           throw new Error('El ID del documento no está definido.');
         }
 
-        // Realizar la solicitud para obtener el historial de versiones usando `idDocumento`
-        const response = await fetch(`http://localhost:5064/api/documentos/${idDocumento}/versiones`);
+        // Hacer la primera solicitud para obtener el detalle del documento
+        const documentResponse = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`);
+        if (!documentResponse.ok) {
+          throw new Error(`Error al obtener el documento. Estado: ${documentResponse.status}`);
+        }
+        const documentData = await documentResponse.json();
 
-        if (!response.ok) {
-          throw new Error(`Error al obtener las versiones. Estado: ${response.status}`);
+        // Obtener el id del documento y hacer la segunda solicitud para obtener las versiones
+        const versionsResponse = await fetch(`http://localhost:5064/api/versionxs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ idDocumento: documentData.idDocumento }) // Usar el idDocumento para obtener las versiones
+        });
+
+        if (!versionsResponse.ok) {
+          throw new Error(`Error al obtener las versiones. Estado: ${versionsResponse.status}`);
         }
 
-        const data = await response.json();
-        setVersions(data.versions || []); // Asegura que `versions` siempre sea un array
+        const versionsData = await versionsResponse.json();
+        setVersions(versionsData.versions || []);
+        
       } catch (error) {
         setError(error.message);
         Swal.fire({
@@ -34,7 +47,7 @@ const VersionHistory = ({ idDocumento }) => {
           confirmButtonText: 'OK'
         });
       } finally {
-        setLoading(false); // Finalizar la carga independientemente del resultado
+        setLoading(false);
       }
     };
 
@@ -57,7 +70,6 @@ const VersionHistory = ({ idDocumento }) => {
               <p><strong>Comentario:</strong> {version.comentario}</p>
               <p><strong>Fecha de Modificación:</strong> {new Date(version.fechaModificacion).toLocaleDateString()}</p>
               <p><strong>Versión Final:</strong> {version.versionFinal ? 'Sí' : 'No'}</p>
-              {/* Aquí puedes agregar más detalles de cada versión */}
             </div>
           ))
         ) : (

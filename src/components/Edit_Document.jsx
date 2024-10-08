@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 
-// Función para obtener el token desde las cookies
 const getTokenFromCookie = () => {
   const cookies = document.cookie.split(';');
   const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
@@ -11,25 +10,22 @@ const getTokenFromCookie = () => {
   return null;
 };
 
-// Función para eliminar el token
 const deleteToken = () => {
   document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 };
 
-// Redirigir al login si el token es inválido o no está presente
 const redirectToLogin = () => {
-  deleteToken(); // Eliminar cualquier token existente
-  window.location.href = '/'; // Redirigir al login
+  deleteToken();
+  window.location.href = '/';
 };
 
-// Función para formatear las fechas en el formato esperado por la API
 const formatDateForAPI = (date) => {
-  return new Date(date).toISOString().slice(0, 19);  // Eliminar la 'Z' del final
+  return new Date(date).toISOString().slice(0, 19);
 };
 
 const EditDocumentForm = ({ idDocumento }) => {
   const [formData, setFormData] = useState({
-    idDocumento,  // Incluir el idDocumento en el estado inicial
+    idDocumento,
     codigoDoc: '',
     fechaRecepcionFca: '',
     fechaEntrega: '',
@@ -37,13 +33,41 @@ const EditDocumentForm = ({ idDocumento }) => {
     asuntoDoc: '',
     observaciones: '',
     tipoDocumento: '',
-    ultimaVersion: 1,
-    idEncargado: '',  // Inicializa con el encargado si existe
+    idEncargado: '',
+    documento: null,
   });
 
-  const [loading, setLoading] = useState(true);  // Estado para manejar la carga
+  const [loading, setLoading] = useState(true);
 
-  // Cargar los datos del documento
+  const getLastVersion = async () => {
+    const token = getTokenFromCookie();
+    try {
+      const response = await fetch(`http://localhost:5064/api/versionxs`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener las versiones');
+      }
+
+      const data = await response.json();
+      const versiones = Array.isArray(data) ? data : data.versions;
+      if (!Array.isArray(versiones)) {
+        throw new Error('El formato de las versiones no es el esperado');
+      }
+      const filteredVersions = versiones.filter(version => version.idDocumento === idDocumento);
+      const ultimaVersion = Math.max(...filteredVersions.map(version => version.id_version), 0);
+      return ultimaVersion;
+    } catch (error) {
+      console.error('Error al obtener la última versión:', error);
+      return 0;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const token = getTokenFromCookie();
@@ -58,7 +82,6 @@ const EditDocumentForm = ({ idDocumento }) => {
       }
 
       try {
-        // Obtener los datos del documento
         const response = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`, {
           method: 'GET',
           headers: {
@@ -74,21 +97,20 @@ const EditDocumentForm = ({ idDocumento }) => {
         const result = await response.json();
         const documentData = result.data.documento;
 
-        // Cargar los datos en el estado
         setFormData({
-          idDocumento: documentData.idDocumento, // Asegúrate de enviar el idDocumento
+          idDocumento: documentData.idDocumento,
           codigoDoc: documentData.codigoDoc,
-          fechaRecepcionFca: documentData.fechaRecepcionFca.split('T')[0], // Fecha formateada
-          fechaEntrega: documentData.fechaEntrega.split('T')[0],  // Fecha formateada
-          fechaPlazo: documentData.fechaPlazo.split('T')[0],  // Fecha formateada
+          fechaRecepcionFca: documentData.fechaRecepcionFca.split('T')[0],
+          fechaEntrega: documentData.fechaEntrega.split('T')[0],
+          fechaPlazo: documentData.fechaPlazo.split('T')[0],
           asuntoDoc: documentData.asuntoDoc,
           observaciones: documentData.observaciones,
           tipoDocumento: documentData.tipoDocumento,
-          ultimaVersion: documentData.ultimaVersion,
           idEncargado: documentData.idEncargado,
+          documento: null,
         });
 
-        setLoading(false); // Terminar la carga
+        setLoading(false);
       } catch (error) {
         console.error('Error al obtener los datos del documento:', error);
         setLoading(false);
@@ -106,8 +128,15 @@ const EditDocumentForm = ({ idDocumento }) => {
     });
   };
 
+  const handleFileChange = (e) => {
+    setFormData({
+      ...formData,
+      documento: e.target.files[0],
+    });
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();  // Prevenir la recarga de la página
+    e.preventDefault();
 
     const token = getTokenFromCookie();
     if (!token) {
@@ -120,49 +149,67 @@ const EditDocumentForm = ({ idDocumento }) => {
       return redirectToLogin();
     }
 
-    const formattedData = {
-      ...formData,
-      fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
-      fechaEntrega: formatDateForAPI(formData.fechaEntrega),
-      fechaPlazo: formatDateForAPI(formData.fechaPlazo),
-      idEncargado: parseInt(formData.idEncargado, 10),
-    };
-
-    console.log("Datos enviados al servidor:", formattedData); // Verificar los datos enviados
-
     try {
-      const response = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`, {
-        method: 'PUT', // Método PUT para actualizar
+      const lastVersion = await getLastVersion();
+      const nextVersion = lastVersion + 1;
+
+      const updatedDocumentData = {
+        ...formData,
+        fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
+        fechaEntrega: formatDateForAPI(formData.fechaEntrega),
+        fechaPlazo: formatDateForAPI(formData.fechaPlazo),
+        idEncargado: parseInt(formData.idEncargado, 10),
+        ultimaVersion: nextVersion,
+      };
+
+      const documentResponse = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formattedData),
+        body: JSON.stringify(updatedDocumentData),
       });
 
-      if (!response.ok) {
-        const errorDetails = await response.json(); // Obtener detalles del error
+      if (!documentResponse.ok) {
+        const errorDetails = await documentResponse.json();
         console.error('Detalles del error:', errorDetails);
         throw new Error('Error al actualizar el documento');
       }
 
+      const versionData = new FormData();
+      versionData.append('idDocumento', formData.idDocumento);
+      versionData.append('documento', formData.documento);
+
+      const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: versionData,
+      });
+
+      if (!versionResponse.ok) {
+        throw new Error('Error al crear la nueva versión');
+      }
+
       Swal.fire({
         title: 'Documento actualizado!',
-        text: 'El documento se ha actualizado exitosamente.',
+        text: 'El documento y la versión se han actualizado exitosamente.',
         icon: 'success',
         confirmButtonText: 'OK',
       });
+
     } catch (error) {
       console.error('Error en la actualización:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'Ocurrió un error al actualizar el documento.',
+        text: 'Ocurrió un error al actualizar el documento y la versión.',
         icon: 'error',
         confirmButtonText: 'OK',
       });
     }
-};
-
+  };
 
   if (loading) {
     return <div>Cargando datos del documento...</div>;
@@ -172,7 +219,6 @@ const EditDocumentForm = ({ idDocumento }) => {
     <form onSubmit={handleSubmit}>
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
         <div className="flex flex-col space-y-4">
-          {/* Código del documento */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="codigoDoc">Código del Documento</label>
             <input
@@ -185,8 +231,6 @@ const EditDocumentForm = ({ idDocumento }) => {
               onChange={handleInputChange}
             />
           </div>
-
-          {/* Encargado */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="idEncargado">Encargado</label>
             <input
@@ -198,8 +242,6 @@ const EditDocumentForm = ({ idDocumento }) => {
               onChange={handleInputChange}
             />
           </div>
-
-          {/* Fechas */}
           <div className="flex flex-col space-y-4">
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="fechaRecepcionFca">Fecha de Recepción FCA</label>
@@ -212,7 +254,6 @@ const EditDocumentForm = ({ idDocumento }) => {
                 onChange={handleInputChange}
               />
             </div>
-
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="fechaEntrega">Fecha de Entrega</label>
               <input
@@ -224,7 +265,6 @@ const EditDocumentForm = ({ idDocumento }) => {
                 onChange={handleInputChange}
               />
             </div>
-
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="fechaPlazo">Fecha Límite</label>
               <input
@@ -236,8 +276,6 @@ const EditDocumentForm = ({ idDocumento }) => {
                 onChange={handleInputChange}
               />
             </div>
-
-            {/* Tipo de Documento */}
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="tipoDocumento">Tipo de Documento</label>
               <select
@@ -256,8 +294,6 @@ const EditDocumentForm = ({ idDocumento }) => {
               </select>
             </div>
           </div>
-
-          {/* Asunto y Observaciones */}
           <div className="flex flex-col space-y-4">
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="asuntoDoc">Asunto</label>
@@ -270,7 +306,6 @@ const EditDocumentForm = ({ idDocumento }) => {
                 onChange={handleInputChange}
               />
             </div>
-
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="observaciones">Observaciones</label>
               <textarea
@@ -283,8 +318,16 @@ const EditDocumentForm = ({ idDocumento }) => {
               />
             </div>
           </div>
-
-          {/* Botón de actualizar */}
+          <div className="flex flex-col">
+            <label htmlFor="documento">Subir Documento</label>
+            <input
+              type="file"
+              name="documento"
+              id="documento"
+              accept=".pdf,.doc,.docx"
+              onChange={handleFileChange}
+            />
+          </div>
           <div className="flex justify-between items-center mb-6">
             <button
               type="submit"
@@ -293,8 +336,8 @@ const EditDocumentForm = ({ idDocumento }) => {
               Actualizar Documento
             </button>
             <button
-            className="bg-azul text-white px-4 py-2 rounded-md hover:bg-amarillo transition-all"
-            onClick={() => window.location.href = `/documentos/versiones`}
+              className="bg-azul text-white px-4 py-2 rounded-md hover:bg-amarillo transition-all"
+              onClick={() => window.location.href = `/documentos/versiones`}
             >
               Ver Historial de Versiones
             </button>
