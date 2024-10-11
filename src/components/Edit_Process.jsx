@@ -28,7 +28,17 @@ const formatDateForAPI = (date) => {
 };
 
 const EditProcessForm = ({ idProceso }) => {
-  const [formData, setFormData] = useState(null);  // Inicializamos con null para no renderizar hasta que haya datos
+  const [formData, setFormData] = useState({
+    idProceso,
+    fechaInicio: '',
+    fechaActualizacion: '',
+    fechaNotificacion: '',
+    descripcion: '',
+    infoArchivo: '',
+    procesosDocumentos: null,
+    });  
+  
+  // Inicializamos con null para no renderizar hasta que haya datos
   const [loading, setLoading] = useState(true);
 
   // Cargar los datos del proceso
