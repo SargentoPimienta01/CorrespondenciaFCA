@@ -35,7 +35,7 @@ const EditProcessForm = ({ idProceso }) => {
     fechaNotificacion: '',
     descripcion: '',
     infoArchivo: '',
-    procesosDocumentos: null,
+    // procesosDocumentos: null,
     });  
   
   // Inicializamos con null para no renderizar hasta que haya datos
@@ -57,6 +57,7 @@ const EditProcessForm = ({ idProceso }) => {
 
       try {
         // Obtener los datos del proceso
+        console.log(idProceso);
         const response = await fetch(`http://localhost:5064/api/procesos/${idProceso}`, {
           method: 'GET',
           headers: {
@@ -70,7 +71,7 @@ const EditProcessForm = ({ idProceso }) => {
         }
 
         const result = await response.json();
-        const processData = result.proceso;  // Asegúrate de que la clave correcta es `proceso`
+        const processData = result.data.proceso;  // Asegúrate de que la clave correcta es `proceso`
 
         console.log("Data fetched from API:", processData);
 
@@ -82,7 +83,7 @@ const EditProcessForm = ({ idProceso }) => {
             fechaNotificacion: processData.fechaNotificacion ? processData.fechaNotificacion.split('T')[0] : '',  // Fecha formateada
             descripcion: processData.descripcion || '',
             infoArchivo: processData.infoArchivo || '',
-            procesosDocumentos: processData.procesosDocumentos || [],  // Array de documentos relacionados
+            // procesosDocumentos: processData.procesosDocumentos || [],  // Array de documentos relacionados
           });
         } else {
           throw new Error('El objeto proceso está vacío o malformado');
@@ -235,7 +236,7 @@ const EditProcessForm = ({ idProceso }) => {
             />
           </div>
 
-          {/* Procesos relacionados con documentos */}
+          {/* Procesos relacionados con documentos 
           {formData.procesosDocumentos.length > 0 && (
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="procesosDocumentos">Documentos Relacionados</label>
@@ -249,6 +250,7 @@ const EditProcessForm = ({ idProceso }) => {
             </div>
           )}
 
+          */}
           {/* Botón de actualizar */}
           <div className="flex justify-between items-center mb-6">
             <button
