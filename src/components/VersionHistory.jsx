@@ -37,20 +37,28 @@ const VersionHistory = ({ idDocumento }) => {
         });
         return redirectToLogin();
       }
-      
+
+      console.log('IdDocumento:', idDocumento);
+
       try {
-        if (!idDocumento) {
-          throw new Error('El ID del documento no está definido.');
-        }
+        // if (!idDocumento) {
+        //   throw new Error('El ID del documento no está definido.');
+        // }
 
         // Hacer la solicitud para obtener todas las versiones
-        const versionsResponse = await fetch('http://localhost:5064/api/versionxs');
+        const response = await fetch(`http://localhost:5064/api/versionxs`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
         
-        if (!versionsResponse.ok) {
-          throw new Error(`Error al obtener las versiones. Estado: ${versionsResponse.status}`);
+        if (!response.ok) {
+          throw new Error(`Error al obtener las versiones. Estado: ${response.status}`);
         }
 
-        const versionsData = await versionsResponse.json();
+        const versionsData = await response.json();
 
         // Filtrar versiones por idDocumento
         const filteredVersions = Array.isArray(versionsData) ? 
