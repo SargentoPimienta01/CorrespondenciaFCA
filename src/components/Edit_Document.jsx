@@ -61,6 +61,7 @@ const EditDocumentForm = ({ idDocumento }) => {
       }
       const filteredVersions = versiones.filter(version => version.idDocumento === idDocumento);
       const ultimaVersion = Math.max(...filteredVersions.map(version => version.id_version), 0);
+      console.log('Ultima Version:', ultimaVersion)
       return ultimaVersion;
     } catch (error) {
       console.error('Error al obtener la última versión:', error);

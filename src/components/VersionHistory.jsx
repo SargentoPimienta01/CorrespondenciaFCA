@@ -1,6 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 
+const getTokenFromCookie = () => {
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+    if (tokenCookie) {
+      return tokenCookie.split('=')[1].trim();
+    }
+    return null;
+  };
+
+  const deleteToken = () => {
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  };
+  
+  const redirectToLogin = () => {
+    deleteToken();
+    window.location.href = '/';
+  };
+
+
 const VersionHistory = ({ idDocumento }) => {
   const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -8,6 +27,17 @@ const VersionHistory = ({ idDocumento }) => {
 
   useEffect(() => {
     const fetchVersions = async () => {
+        const token = getTokenFromCookie();
+        if (!token) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'No se encontró el token de autenticación. Redirigiendo al login.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+        return redirectToLogin();
+      }
+      
       try {
         if (!idDocumento) {
           throw new Error('El ID del documento no está definido.');
