@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2'; // Opcional, para mostrar alertas amigables
+import Swal from 'sweetalert2';
 
 export const Search = ({ className }) => (
   <svg className={className} role="img" fill="#000000" height="20" width="20" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
@@ -24,9 +24,9 @@ const AsigList = () => {
     const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
 
     if (tokenCookie) {
-      return tokenCookie.split('=')[1].trim();  // Asegúrate de eliminar cualquier espacio adicional
+      return tokenCookie.split('=')[1].trim(); 
     }
-    return null;  // Retornar null si no se encuentra la cookie
+    return null;
   };
 
   // Función para extraer la expiración del token de la cookie
@@ -35,27 +35,27 @@ const AsigList = () => {
     const expiryCookie = cookies.find(cookie => cookie.trim().startsWith('expiry='));
 
     if (expiryCookie) {
-      return expiryCookie.split('=')[1].trim();  // Extraer la expiración
+      return expiryCookie.split('=')[1].trim();
     }
-    return null;  // Retornar null si no se encuentra la cookie de expiración
+    return null; 
   };
 
   // Función para eliminar el token y la expiración de la cookie (logout)
   const deleteTokenAndExpiryFromCookie = () => {
-    document.cookie = 'token=; Max-Age=0; path=/;';  // Eliminar la cookie de token
-    document.cookie = 'expiry=; Max-Age=0; path=/;';  // Eliminar la cookie de expiración
+    document.cookie = 'token=; Max-Age=0; path=/;';  
+    document.cookie = 'expiry=; Max-Age=0; path=/;';
   };
 
   // Función para verificar si el token ha expirado
   const checkTokenExpiry = () => {
     const expiryTime = getExpiryFromCookie();
     
-    if (!expiryTime) return false; // Si no hay una cookie de expiración, consideramos que no hay expiración
+    if (!expiryTime) return false; 
 
-    const expiryDate = new Date(parseInt(expiryTime, 10)); // Convertir la expiración en una fecha
+    const expiryDate = new Date(parseInt(expiryTime, 10)); 
     const now = new Date();
 
-    return expiryDate.getTime() < now.getTime(); // Retorna true si el token ha expirado
+    return expiryDate.getTime() < now.getTime(); 
   };
 
   // Fetch para obtener las asignaciones
@@ -70,17 +70,19 @@ const AsigList = () => {
         setToken(storedToken);
 
         const response = await fetch('http://localhost:5064/api/asignaciones', {
-          headers: {
-            'Authorization': `Bearer ${storedToken}`
-          }
-        });
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`, 
+            },
+          });
 
         if (!response.ok) {
           throw new Error(`Error al obtener asignaciones: ${response.statusText}`);
         }
 
         const data = await response.json();
-        setAsignaciones(data); // Guardar todas las asignaciones en el estado
+        setAsignaciones(data);
         setFilteredAsignaciones(data.filter(asignacion => asignacion.estado === 'En curso')); // Filtrar las asignaciones en curso
 
       } catch (err) {
