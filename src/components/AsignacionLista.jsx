@@ -60,15 +60,23 @@ const AsigList = () => {
 
   // Fetch para obtener las asignaciones
   useEffect(() => {
+
+    const token = getTokenFromCookie();
+    const tokenExpired = checkTokenExpiry();
+
+    console.log('Token extraído de la cookie:', token);
+
+    if (!token || tokenExpired) {
+      console.log('Token no encontrado o expirado.');
+      deleteTokenAndExpiryFromCookie();  // Eliminar el token si está vencido o no se encuentra
+      window.location.href = '/';  // Redirigir al login
+      return;
+    }
+
+    setToken(token);
+
     const fetchAsignaciones = async () => {
       try {
-        const storedToken = getTokenFromCookie();
-        if (!storedToken || checkTokenExpiry()) {
-          throw new Error('Token no válido o ha expirado');
-        }
-
-        setToken(storedToken);
-
         const response = await fetch('http://localhost:5064/api/asignaciones', {
             method: 'GET',
             headers: {
@@ -77,33 +85,58 @@ const AsigList = () => {
             },
           });
 
+        console.log('Estado de respuesta:', response.status);
+
         if (!response.ok) {
-          throw new Error(`Error al obtener asignaciones: ${response.statusText}`);
+          const errorDetails = await response.text();
+          console.log('Detalles del error:', errorDetails);
+          throw new Error(`Error al obtener asignaciones. Status: ${response.status}. Detalles: ${errorDetails}`);
         }
 
-        const data = await response.json();
-        setAsignaciones(data);
-        setFilteredAsignaciones(data.filter(asignacion => asignacion.estado === 'En curso')); // Filtrar las asignaciones en curso
+        const result = await response.json();
+        console.log('Datos obtenidos:', result);
 
-      } catch (err) {
+        if (result.data && Array.isArray(result.data.asignaciones)) {
+            setProcesos(result.data.asignaciones);
+            setFilteredProcesos(result.data.asignaciones);
+        } else {
+            throw new Error('La API no devolvió un array de Asignaciones');
+        }
+
+        setLoading(false);
+
+        } catch (err) {
+        console.error('Error en la solicitud fetch:', err);
         setError(err.message);
         Swal.fire({
-          title: 'Error',
-          text: `Error al cargar asignaciones: ${err.message}`,
-          icon: 'error',
-          confirmButtonText: 'OK'
-        });
-      } finally {
+            title: 'Error',
+            text: `Error al cargar asignaciones: ${err.message}`,
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
         setLoading(false);
-      }
+        }
     };
 
     fetchAsignaciones();
-  }, []);
+  }, [token]);
+
+  const filterAsignaciones = (searchTerm) => {
+    setFilteredProcesos(asignaciones.filter(asignacion =>
+      asignacion.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+    ));
+  };
+
+  const handleProcessClick = (e, AsignacionId) => {
+    e.stopPropagation(); // Detiene la propagación al padre
+    console.log(`Navegando al proceso ID: ${AsignacionId}`);
+    window.location.href = `/asignaciones/${AsignacionId}`;
+  };
 
   if (loading) {
     return <div>Cargando asignaciones...</div>;
   }
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="p-5">
