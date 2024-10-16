@@ -116,9 +116,10 @@ const ProcessList = () => {
   }, [token]);  // Ejecutar el useEffect cuando el token cambie
 
   const filterProcesos = (searchTerm) => {
-    setFilteredProcesos(procesos.filter(proceso =>
+    const filtered = procesos.filter(proceso =>
       proceso.codigo.toLowerCase().includes(searchTerm.toLowerCase())
-    ));
+    );
+    setFilteredProcesos(filtered);
   };
 
   const handleProcessClick = (e, procesoId) => {
