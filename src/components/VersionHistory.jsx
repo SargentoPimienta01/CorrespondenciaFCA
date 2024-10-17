@@ -2,23 +2,22 @@ import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 
 const getTokenFromCookie = () => {
-    const cookies = document.cookie.split(';');
-    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
-    if (tokenCookie) {
-      return tokenCookie.split('=')[1].trim();
-    }
-    return null;
-  };
+  const cookies = document.cookie.split(';');
+  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+  if (tokenCookie) {
+    return tokenCookie.split('=')[1].trim();
+  }
+  return null;
+};
 
-  const deleteToken = () => {
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-  };
-  
-  const redirectToLogin = () => {
-    deleteToken();
-    window.location.href = '/';
-  };
+const deleteToken = () => {
+  document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+};
 
+const redirectToLogin = () => {
+  deleteToken();
+  window.location.href = '/';
+};
 
 const VersionHistory = ({ idDocumento }) => {
   const [versions, setVersions] = useState([]);
@@ -26,9 +25,15 @@ const VersionHistory = ({ idDocumento }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!idDocumento) {
+      setError('El ID del documento no está definido.');
+      setLoading(false);
+      return;
+    }
+
     const fetchVersions = async () => {
-        const token = getTokenFromCookie();
-        if (!token) {
+      const token = getTokenFromCookie();
+      if (!token) {
         Swal.fire({
           title: 'Error!',
           text: 'No se encontró el token de autenticación. Redirigiendo al login.',
@@ -38,41 +43,32 @@ const VersionHistory = ({ idDocumento }) => {
         return redirectToLogin();
       }
 
-      console.log('IdDocumento:', idDocumento);
-
       try {
-        // if (!idDocumento) {
-        //   throw new Error('El ID del documento no está definido.');
-        // }
-
-        // Hacer la solicitud para obtener todas las versiones
         const response = await fetch(`http://localhost:5064/api/versionxs`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-        
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           throw new Error(`Error al obtener las versiones. Estado: ${response.status}`);
         }
 
         const versionsData = await response.json();
-
-        // Filtrar versiones por idDocumento
-        const filteredVersions = Array.isArray(versionsData) ? 
-          versionsData.filter(version => version.idDocumento === idDocumento) : [];
+        const filteredVersions = Array.isArray(versionsData)
+          ? versionsData.filter(version => version.idDocumento === parseInt(idDocumento, 10))
+          : [];
 
         setVersions(filteredVersions);
-        
       } catch (error) {
         setError(error.message);
         Swal.fire({
           title: 'Error',
           text: `Error al cargar las versiones: ${error.message}`,
           icon: 'error',
-          confirmButtonText: 'OK'
+          confirmButtonText: 'OK',
         });
       } finally {
         setLoading(false);
@@ -95,7 +91,7 @@ const VersionHistory = ({ idDocumento }) => {
         versions.length > 0 ? (
           versions.map((version) => (
             <div key={version.idVersion} className="border-b border-gray-300 pb-2 mb-2">
-              <p><strong>Comentario:</strong> {version.comentario}</p>
+              <p><strong>Comentario:</strong> {version.comentario || 'Sin comentario'}</p>
               <p><strong>Fecha de Modificación:</strong> {new Date(version.fechaModificacion).toLocaleDateString()}</p>
               <p><strong>Versión Final:</strong> {version.versionFinal ? 'Sí' : 'No'}</p>
             </div>
@@ -109,4 +105,3 @@ const VersionHistory = ({ idDocumento }) => {
 };
 
 export default VersionHistory;
-

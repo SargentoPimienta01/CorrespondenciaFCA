@@ -39,36 +39,6 @@ const EditDocumentForm = ({ idDocumento }) => {
 
   const [loading, setLoading] = useState(true);
 
-  const getLastVersion = async () => {
-    const token = getTokenFromCookie();
-    try {
-      const response = await fetch(`http://localhost:5064/api/versionxs`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al obtener las versiones');
-      }
-
-      const data = await response.json();
-      const versiones = Array.isArray(data) ? data : data.versions;
-      if (!Array.isArray(versiones)) {
-        throw new Error('El formato de las versiones no es el esperado');
-      }
-      const filteredVersions = versiones.filter(version => version.idDocumento === idDocumento);
-      const ultimaVersion = Math.max(...filteredVersions.map(version => version.id_version), 0);
-      console.log('Ultima Version:', ultimaVersion)
-      return ultimaVersion;
-    } catch (error) {
-      console.error('Error al obtener la última versión:', error);
-      return 0;
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       const token = getTokenFromCookie();
@@ -151,16 +121,12 @@ const EditDocumentForm = ({ idDocumento }) => {
     }
 
     try {
-      const lastVersion = await getLastVersion();
-      const nextVersion = lastVersion + 1;
-
       const updatedDocumentData = {
         ...formData,
         fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
         fechaEntrega: formatDateForAPI(formData.fechaEntrega),
         fechaPlazo: formatDateForAPI(formData.fechaPlazo),
         idEncargado: parseInt(formData.idEncargado, 10),
-        ultimaVersion: nextVersion,
       };
 
       const documentResponse = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`, {
@@ -178,25 +144,9 @@ const EditDocumentForm = ({ idDocumento }) => {
         throw new Error('Error al actualizar el documento');
       }
 
-      const versionData = new FormData();
-      versionData.append('idDocumento', formData.idDocumento);
-      versionData.append('documento', formData.documento);
-
-      const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: versionData,
-      });
-
-      if (!versionResponse.ok) {
-        throw new Error('Error al crear la nueva versión');
-      }
-
       Swal.fire({
         title: 'Documento actualizado!',
-        text: 'El documento y la versión se han actualizado exitosamente.',
+        text: 'El documento se ha actualizado exitosamente.',
         icon: 'success',
         confirmButtonText: 'OK',
       });
@@ -205,11 +155,16 @@ const EditDocumentForm = ({ idDocumento }) => {
       console.error('Error en la actualización:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'Ocurrió un error al actualizar el documento y la versión.',
+        text: 'Ocurrió un error al actualizar el documento.',
         icon: 'error',
         confirmButtonText: 'OK',
       });
     }
+  };
+
+  const handleViewVersions = () => {
+    localStorage.setItem('idDocumento', idDocumento);
+    window.location.href = `/documentos/versiones`;
   };
 
   if (loading) {
@@ -232,6 +187,7 @@ const EditDocumentForm = ({ idDocumento }) => {
               onChange={handleInputChange}
             />
           </div>
+
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="idEncargado">Encargado</label>
             <input
@@ -243,6 +199,7 @@ const EditDocumentForm = ({ idDocumento }) => {
               onChange={handleInputChange}
             />
           </div>
+
           <div className="flex flex-col space-y-4">
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="fechaRecepcionFca">Fecha de Recepción FCA</label>
@@ -255,6 +212,7 @@ const EditDocumentForm = ({ idDocumento }) => {
                 onChange={handleInputChange}
               />
             </div>
+
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="fechaEntrega">Fecha de Entrega</label>
               <input
@@ -266,6 +224,7 @@ const EditDocumentForm = ({ idDocumento }) => {
                 onChange={handleInputChange}
               />
             </div>
+
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2" htmlFor="fechaPlazo">Fecha Límite</label>
               <input
@@ -277,48 +236,50 @@ const EditDocumentForm = ({ idDocumento }) => {
                 onChange={handleInputChange}
               />
             </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2" htmlFor="tipoDocumento">Tipo de Documento</label>
-              <select
-                name="tipoDocumento"
-                id="tipoDocumento"
-                className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-                value={formData.tipoDocumento}
-                onChange={handleInputChange}
-              >
-                <option value="">Seleccione un tipo</option>
-                <option value="Informe">Informe</option>
-                <option value="Propuesta">Propuesta</option>
-                <option value="Contrato">Contrato</option>
-                <option value="Solicitud">Solicitud</option>
-                <option value="Notificación">Notificación</option>
-              </select>
-            </div>
           </div>
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2" htmlFor="asuntoDoc">Asunto</label>
-              <textarea
-                name="asuntoDoc"
-                id="asuntoDoc"
-                rows="3"
-                className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
-                value={formData.asuntoDoc}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2" htmlFor="observaciones">Observaciones</label>
-              <textarea
-                name="observaciones"
-                id="observaciones"
-                rows="3"
-                className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
-                value={formData.observaciones}
-                onChange={handleInputChange}
-              />
-            </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="tipoDocumento">Tipo de Documento</label>
+            <select
+              name="tipoDocumento"
+              id="tipoDocumento"
+              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
+              value={formData.tipoDocumento}
+              onChange={handleInputChange}
+            >
+              <option value="">Seleccione un tipo</option>
+              <option value="Informe">Informe</option>
+              <option value="Propuesta">Propuesta</option>
+              <option value="Contrato">Contrato</option>
+              <option value="Solicitud">Solicitud</option>
+              <option value="Notificación">Notificación</option>
+            </select>
           </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="asuntoDoc">Asunto</label>
+            <textarea
+              name="asuntoDoc"
+              id="asuntoDoc"
+              rows="3"
+              className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
+              value={formData.asuntoDoc}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="observaciones">Observaciones</label>
+            <textarea
+              name="observaciones"
+              id="observaciones"
+              rows="3"
+              className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
+              value={formData.observaciones}
+              onChange={handleInputChange}
+            />
+          </div>
+
           <div className="flex flex-col">
             <label htmlFor="documento">Subir Documento</label>
             <input
@@ -329,6 +290,7 @@ const EditDocumentForm = ({ idDocumento }) => {
               onChange={handleFileChange}
             />
           </div>
+
           <div className="flex justify-between items-center mb-6">
             <button
               type="submit"
@@ -336,14 +298,20 @@ const EditDocumentForm = ({ idDocumento }) => {
             >
               Actualizar Documento
             </button>
+
             <button
-              className="bg-azul text-white px-4 py-2 rounded-md hover:bg-amarillo transition-all"
-              onClick={() => window.location.href = `/documentos/versiones`}
+              className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
+              type="button"
+              onClick={() => {
+                const url = `/documentos/versiones?idDocumento=${idDocumento}`;
+                window.location.href = url;
+              }}
             >
               Ver Historial de Versiones
             </button>
           </div>
         </div>
+        
         <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">
           <h2 className="text-2xl font-bold text-white">¡Cada documento cuenta! 📄</h2>
           <p className="text-lg text-white">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>

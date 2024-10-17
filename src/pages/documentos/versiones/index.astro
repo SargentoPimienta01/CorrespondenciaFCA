@@ -2,11 +2,16 @@
 import Layout from "../../../layouts/Correspondencia.astro";
 import VersionHistory from "../../../components/VersionHistory";
 
-const { idDocumento } = Astro.params;
+const url = new URL(Astro.request.url);
+const idDocumento = url.searchParams.get('idDocumento');
 ---
 
 <Layout title="Historial de Versiones">
-    <section class="p-5">
-      <VersionHistory idDocumento={idDocumento} client:load/>
-    </section>
-  </Layout>
+  <section class="p-5">
+    {idDocumento ? (
+      <VersionHistory idDocumento={idDocumento} client:load />
+    ) : (
+      <p class="text-red-500">Error: ID del documento no definido.</p>
+    )}
+  </section>
+</Layout>
