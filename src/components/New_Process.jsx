@@ -18,17 +18,18 @@ const deleteToken = () => {
 
 // Redirigir al login si el token es inválido o no está presente
 const redirectToLogin = () => {
-  deleteToken(); // Eliminar cualquier token existente
-  window.location.href = '/'; // Redirigir al login
+  deleteToken();
+  window.location.href = '/';
 };
 
 const NewProcessForm = () => {
   const [formData, setFormData] = useState({
-    fechaInicio: '', // Fecha de inicio del proceso
-    fechaActualizacion: '', // Fecha de la última actualización
-    fechaNotificacion: '', // Fecha de notificación
-    descripcion: '', // Descripción del proceso (Asunto)
-    infoArchivo: '', // Archivo relacionado
+    nombre: '', // Nuevo campo para el nombre
+    fechaInicio: '',
+    fechaActualizacion: '',
+    fechaNotificacion: '',
+    descripcion: '',
+    infoArchivo: '',
   });
 
   // Manejar los cambios en los inputs del formulario
@@ -55,7 +56,7 @@ const NewProcessForm = () => {
     }
 
     try {
-      const url = 'http://localhost:5064/api/procesos'; // URL para crear un nuevo proceso
+      const url = 'http://localhost:5064/api/procesos';
 
       const response = await fetch(url, {
         method: 'POST',
@@ -63,13 +64,7 @@ const NewProcessForm = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          fechaInicio: formData.fechaInicio,
-          fechaActualizacion: formData.fechaActualizacion,
-          fechaNotificacion: formData.fechaNotificacion,
-          descripcion: formData.descripcion,
-          infoArchivo: formData.infoArchivo,
-        })
+        body: JSON.stringify(formData)
       });
 
       if (!response.ok) {
@@ -89,6 +84,7 @@ const NewProcessForm = () => {
 
       // Resetear el formulario
       setFormData({
+        nombre: '',
         fechaInicio: '',
         fechaActualizacion: '',
         fechaNotificacion: '',
@@ -113,6 +109,20 @@ const NewProcessForm = () => {
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Campo para Nombre */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="nombre">Nombre del Proceso</label>
+            <input
+              type="text"
+              name="nombre"
+              id="nombre"
+              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
+              value={formData.nombre}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          {/* Información del archivo */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="infoArchivo">Información del Archivo</label>
             <input
@@ -127,6 +137,7 @@ const NewProcessForm = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Fechas */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="fechaInicio">Fecha de Inicio</label>
             <input
@@ -196,4 +207,3 @@ const NewProcessForm = () => {
 };
 
 export default NewProcessForm;
-
