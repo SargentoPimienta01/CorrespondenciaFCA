@@ -16,7 +16,6 @@ const AsigList = () => {
   const [filteredAsignaciones, setFilteredAsignaciones] = useState([]); // Estado para manejar las asignaciones filtradas
   const [loading, setLoading] = useState(true); // Estado para manejar la carga
   const [error, setError] = useState(null); // Estado para manejar errores
-  const [token, setToken] = useState(null);  // Estado para almacenar el token
 
   // Función para extraer el token de la cookie
   const getTokenFromCookie = () => {
@@ -29,51 +28,21 @@ const AsigList = () => {
     return null;
   };
 
-  // Función para extraer la expiración del token de la cookie
-  const getExpiryFromCookie = () => {
-    const cookies = document.cookie.split(';');
-    const expiryCookie = cookies.find(cookie => cookie.trim().startsWith('expiry='));
-
-    if (expiryCookie) {
-      return expiryCookie.split('=')[1].trim();
-    }
-    return null; 
-  };
-
-  // Función para eliminar el token y la expiración de la cookie (logout)
-  const deleteTokenAndExpiryFromCookie = () => {
-    document.cookie = 'token=; Max-Age=0; path=/;';  
-    document.cookie = 'expiry=; Max-Age=0; path=/;';
-  };
-
-  // Función para verificar si el token ha expirado
-  const checkTokenExpiry = () => {
-    const expiryTime = getExpiryFromCookie();
-    
-    if (!expiryTime) return false; 
-
-    const expiryDate = new Date(parseInt(expiryTime, 10)); 
-    const now = new Date();
-
-    return expiryDate.getTime() < now.getTime(); 
+  // Función para eliminar el token de la cookie si es inválido
+  const deleteTokenAndRedirect = () => {
+    document.cookie = 'token=; Max-Age=0; path=/;';
+    window.location.href = '/';  // Redirigir al login
   };
 
   // Fetch para obtener las asignaciones
   useEffect(() => {
-
     const token = getTokenFromCookie();
-    const tokenExpired = checkTokenExpiry();
 
-    console.log('Token extraído de la cookie:', token);
-
-    if (!token || tokenExpired) {
+    if (!token) {
       console.log('Token no encontrado o expirado.');
-      deleteTokenAndExpiryFromCookie();  // Eliminar el token si está vencido o no se encuentra
-      window.location.href = '/';  // Redirigir al login
+      deleteTokenAndRedirect();
       return;
     }
-
-    setToken(token);
 
     const fetchAsignaciones = async () => {
       try {
@@ -85,8 +54,6 @@ const AsigList = () => {
             },
           });
 
-        console.log('Estado de respuesta:', response.status);
-
         if (!response.ok) {
           const errorDetails = await response.text();
           console.log('Detalles del error:', errorDetails);
@@ -97,15 +64,15 @@ const AsigList = () => {
         console.log('Datos obtenidos:', result);
 
         if (result.data && Array.isArray(result.data.asignaciones)) {
-            setProcesos(result.data.asignaciones);
-            setFilteredProcesos(result.data.asignaciones);
+            setAsignaciones(result.data.asignaciones);
+            setFilteredAsignaciones(result.data.asignaciones);
         } else {
             throw new Error('La API no devolvió un array de Asignaciones');
         }
 
         setLoading(false);
 
-        } catch (err) {
+      } catch (err) {
         console.error('Error en la solicitud fetch:', err);
         setError(err.message);
         Swal.fire({
@@ -113,24 +80,36 @@ const AsigList = () => {
             text: `Error al cargar asignaciones: ${err.message}`,
             icon: 'error',
             confirmButtonText: 'OK'
-          });
+        });
         setLoading(false);
-        }
+      }
     };
 
     fetchAsignaciones();
-  }, [token]);
+  }, []);
 
+  // Función para filtrar las asignaciones por instrucción
   const filterAsignaciones = (searchTerm) => {
-    setFilteredProcesos(asignaciones.filter(asignacion =>
-      asignacion.codigo.toLowerCase().includes(searchTerm.toLowerCase())
-    ));
+    const filtered = asignaciones.filter(asignacion =>
+      asignacion.instruccion.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredAsignaciones(filtered);
   };
 
-  const handleProcessClick = (e, AsignacionId) => {
-    e.stopPropagation(); // Detiene la propagación al padre
-    console.log(`Navegando al proceso ID: ${AsignacionId}`);
-    window.location.href = `/asignaciones/${AsignacionId}`;
+  // Función para mostrar detalles completos de la asignación en SweetAlert
+  const handleAsignacionClick = (asignacion) => {
+    Swal.fire({
+      title: `Asignación: ${asignacion.instruccion}`,
+      html: `
+        <p><strong>ID:</strong> ${asignacion.idAsignacion}</p>
+        <p><strong>Instrucción:</strong> ${asignacion.instruccion}</p>
+        <p><strong>Fecha Asignado:</strong> ${new Date(asignacion.fechaAsignado).toLocaleString()}</p>
+        <p><strong>Fecha Entrega:</strong> ${new Date(asignacion.fechaEntrega).toLocaleString()}</p>
+        <p><strong>ID Usuario:</strong> ${asignacion.idUsuario}</p>
+      `,
+      icon: 'info',
+      confirmButtonText: 'Cerrar'
+    });
   };
 
   if (loading) {
@@ -140,23 +119,56 @@ const AsigList = () => {
 
   return (
     <div className="p-5">
-      <h1 className="text-xl font-bold mb-4">Asignaciones en Curso</h1>
-      {error ? (
-        <p className="text-red-500">Error: {error}</p>
-      ) : (
-        filteredAsignaciones.length > 0 ? (
-          filteredAsignaciones.map((asignacion) => (
-            <div key={asignacion.idAsignacion} className="border-b border-gray-300 pb-2 mb-2">
-              <p><strong>Título:</strong> {asignacion.titulo}</p>
-              <p><strong>Descripción:</strong> {asignacion.descripcion}</p>
-              <p><strong>Fecha de Inicio:</strong> {new Date(asignacion.fechaInicio).toLocaleDateString()}</p>
-              <p><strong>Fecha de Fin:</strong> {asignacion.fechaFin ? new Date(asignacion.fechaFin).toLocaleDateString() : 'En curso'}</p>
+      <div className="flex justify-between items-center mb-5">
+        <a href="/nueva-asignacion" className="hover:no-underline">
+          <button 
+            className="bg-azul text-white px-4 py-2 rounded cursor-pointer mr-5 transform hover:bg-amarillo hover:scale-105 transition-colors duration-300 ease-in-out"
+          >
+            + Añadir Asignación
+          </button>
+        </a>
+        <input
+          id="codigo-asignacion"
+          name="codigoAsignacion"
+          type="text"
+          placeholder="Buscar por instrucción"
+          className="flex-1 px-2 py-1 border border-black rounded"
+          onChange={(e) => filterAsignaciones(e.target.value)}
+        />
+        <button 
+          id="buscar-btn"
+          name="buscar"
+          className="bg-transparent border-none cursor-pointer ml-2"
+        >
+          <Search className="text-black w-5 h-5" />
+        </button>
+      </div>
+
+      {filteredAsignaciones.length > 0 ? (
+        filteredAsignaciones.map((asignacion) => (
+          <div
+            key={asignacion.idAsignacion}
+            className="bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer mb-2"
+            onClick={() => handleAsignacionClick(asignacion)}
+          >
+            <div className='p-4'>
+              <div className="flex justify-between w-full mb-2">
+                <span className="text-lg font-bold text-gray-800">{asignacion.instruccion}</span>
+                <span className="text-sm text-gray-500">{new Date(asignacion.fechaEntrega).toLocaleDateString()}</span>
+              </div>
+              <div className="text-gray-600">
+                <p>ID Usuario: {asignacion.idUsuario}</p>
+              </div>
             </div>
-          ))
-        ) : (
-          <p>No hay asignaciones en curso.</p>
-        )
+          </div>
+        ))
+      ) : (
+        <p>No hay asignaciones disponibles.</p>
       )}
+      <div className="mt-10 text-center p-5 bg-amarillo rounded-lg">
+          <h2 className="text-2xl font-bold text-white">¡Cada documento cuenta! 📄</h2>
+          <p className="text-lg text-white">Recuerda que cada detalle en este documento es esencial para mantener la precisión y el éxito en tus proyectos. ¡Sigue editando con dedicación! 💡</p>
+        </div>
     </div>
   );
 };
