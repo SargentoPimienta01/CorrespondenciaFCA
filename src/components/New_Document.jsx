@@ -35,10 +35,10 @@ const NewDocumentForm = ({ usuarios }) => {
     fechaPlazo: '',
     asuntoDoc: '',
     observaciones: '',
-    tipoDocumento: '',  // Asegurarnos de que tipoDocumento está inicializado
+    tipoDocumento: '',  
     ultimaVersion: 1,
-    idEncargado: usuarios[0]?.id_usuario || '',  // Inicializa con el primer encargado, en formato numérico
-    documento: '' // Campo requerido "documento"
+    idEncargado: usuarios[0]?.id_usuario || '',  
+    documento: null  // Campo para el archivo (PDF, Word, Excel)
   });
 
   // Función para manejar cambios en los inputs
@@ -50,11 +50,29 @@ const NewDocumentForm = ({ usuarios }) => {
     });
   };
 
+  // Función para manejar el cambio de archivo
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+  
+      reader.onload = (event) => {
+        const binaryStr = event.target.result;
+        const byteArray = new Uint8Array(binaryStr); // Convertir a Uint8Array (similar a byte[] en C#)
+        setFormData({
+          ...formData,
+          documento: byteArray,  // Almacenar el archivo convertido en bytes
+        });
+      };
+  
+      reader.readAsArrayBuffer(file); // Leer el archivo como un array de bytes
+    }
+  };
+
   // Función para manejar el envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();  // Prevenir la recarga de la página
 
-    console.log("Intentando enviar el formulario...");
     const token = getTokenFromCookie();
 
     if (!token) {
@@ -67,7 +85,32 @@ const NewDocumentForm = ({ usuarios }) => {
       return redirectToLogin();
     }
 
-    // Forzar a que idEncargado sea un número entero y formatear fechas correctamente
+    // Validar si no se ha subido un archivo
+    if (!formData.documento) {
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No has subido ningún archivo. ¿Deseas continuar sin archivo?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      // Si cancela, detener la operación
+      if (!result.isConfirmed) {
+        Swal.fire({
+          title: 'Cancelado',
+          text: 'El registro fue cancelado.',
+          icon: 'info',
+          confirmButtonText: 'OK',
+        });
+        return;
+      }
+    }
+
+    // Formatear los datos antes de enviar
     const formattedData = {
       ...formData,
       fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
@@ -76,11 +119,9 @@ const NewDocumentForm = ({ usuarios }) => {
       idEncargado: parseInt(formData.idEncargado, 10), // Asegurarse de que es un número
     };
 
-    console.log('Enviando datos formateados:', formattedData);
-    console.log('Token:', token);
-
     try {
-      const response = await fetch('http://localhost:5064/api/documentos', {
+      // Crear el documento
+      const documentResponse = await fetch('http://localhost:5064/api/documentos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,53 +130,66 @@ const NewDocumentForm = ({ usuarios }) => {
         body: JSON.stringify(formattedData),
       });
 
-      console.log('Estado de la respuesta:', response.status);
-
-      if (response.ok) {
-        Swal.fire({
-          title: 'Documento registrado!',
-          text: 'El documento se ha registrado exitosamente.',
-          icon: 'success',
-          confirmButtonText: 'OK',
-        });
-        // Resetear el formulario después de un registro exitoso
-        setFormData({
-          codigoDoc: '',
-          fechaRecepcionFca: '',
-          fechaEntrega: '',
-          fechaPlazo: '',
-          asuntoDoc: '',
-          observaciones: '',
-          tipoDocumento: '',
-          ultimaVersion: 1,
-          idEncargado: usuarios[0]?.id_usuario || '',  // Restablecer el idEncargado como número
-          documento: '' // Restablecer el campo documento
-        });
-      } else if (response.status === 401) {
-        Swal.fire({
-          title: 'Error de Autenticación!',
-          text: 'El token ha expirado. Redirigiendo al login.',
-          icon: 'error',
-          confirmButtonText: 'OK',
-        });
-        redirectToLogin();
-      } else {
-        const errorResponse = await response.json();
-        console.error('Error en el registro:', errorResponse);
-        
-        // Mostrar los errores de validación en consola y en un mensaje de alerta
-        Swal.fire({
-          title: 'Error!',
-          text: `Ocurrió un error al registrar el documento: ${JSON.stringify(errorResponse.errors)}`,
-          icon: 'error',
-          confirmButtonText: 'OK',
-        });
+      if (!documentResponse.ok) {
+        const errorDetails = await documentResponse.json();
+        console.error('Error en el registro del documento:', errorDetails);
+        throw new Error('Error al crear el documento');
       }
+
+      // Obtener el id del documento recién creado
+      const documentData = await documentResponse.json();
+      const { idDocumento } = documentData.data.documento;
+
+      // Crear la primera versión del documento (si existe archivo)
+      const versionData = new FormData();
+      versionData.append('idDocumento', idDocumento);
+      versionData.append('versionFinal', false);  // Es la primera versión, no es la final
+      versionData.append('comentario', formData.asuntoDoc);
+
+      if (formData.documento) {
+        versionData.append('documento', new Blob([formData.documento]));  // Añadir el archivo si existe
+      }
+
+      const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: versionData,
+      });
+
+      if (!versionResponse.ok) {
+        const errorDetails = await versionResponse.json();
+        console.error('Error en la creación de la versión:', errorDetails);
+        throw new Error('Error al crear la nueva versión');
+      }
+
+      Swal.fire({
+        title: 'Documento registrado!',
+        text: 'El documento y su primera versión se han registrado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'OK',
+      });
+
+      // Resetear el formulario después de un registro exitoso
+      setFormData({
+        codigoDoc: '',
+        fechaRecepcionFca: '',
+        fechaEntrega: '',
+        fechaPlazo: '',
+        asuntoDoc: '',
+        observaciones: '',
+        tipoDocumento: '',
+        ultimaVersion: 1,
+        idEncargado: usuarios[0]?.id_usuario || '',  
+        documento: null
+      });
+
     } catch (error) {
-      console.error('Error de conexión:', error);
+      console.error('Error al conectar con el servidor:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'No se pudo conectar con el servidor.',
+        text: 'No se pudo registrar el documento y su versión.',
         icon: 'error',
         confirmButtonText: 'OK',
       });
@@ -266,19 +320,17 @@ const NewDocumentForm = ({ usuarios }) => {
             </div>
           </div>
 
-          {/* Campo Documento 
+          {/* Subir Documento */}
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="documento">Documento</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="documento">Subir Documento</label>
             <input
-              type="text"
+              type="file"
               name="documento"
               id="documento"
-              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.documento}
-              onChange={handleInputChange}
+              accept=".pdf,.doc,.docx,.xls,.xlsx"
+              onChange={handleFileChange}
             />
           </div>
-          */}
 
           {/* Botón de enviar */}
           <div className="flex justify-between items-center mb-6">
