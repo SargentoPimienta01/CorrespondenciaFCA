@@ -4,21 +4,61 @@ import Layout from '../../layouts/Correspondencia.astro';
 
 const { id } = Astro.params;  // Obtener el ID del documento desde la URL
 
-// let token = Astro.cookies.get('token')?.value;
+let token = null;
+let usuarios = [];
 
-// if (!token) {
-//   throw new Error('No se ha encontrado un token de autenticación en las cookies.');
-// }
+// Intentar obtener el token desde las cookies (establecido por el cliente)
+token = Astro.cookies.get('token');
+console.log('Token antes de enviar:', token, typeof token); // Verificar si el token está presente
+
+if (token && typeof token === 'object') {
+  token = token.value;  // Extrae el valor del token
+}
+
+console.log('Token extraído:', token);
+
+if (!token) {
+  console.error('No se ha encontrado un token de autenticación en las cookies.');
+} else {
+  try {
+    // Realizar la solicitud GET para obtener los usuarios desde la API
+    const response = await fetch(`http://localhost:5064/api/usuarios`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Token formateado:', token);
+    console.log('Respuesta', response.headers);
+    console.log('Estado de la respuesta:', response.status); // Verificar el estado de la respuesta
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error recibido de la API:', errorData); // Verificar los errores recibidos
+      throw new Error('Error al obtener los usuarios desde la API');
+    }
+
+    const result = await response.json();
+    usuarios = result.data.usuarios;  // Asegúrate de que la API devuelve usuarios correctamente
+    console.log('Usuarios obtenidos:', usuarios); // Verificar los datos obtenidos
+
+  } catch (error) {
+    console.error('Hubo un problema al obtener los datos de los usuarios:', error);
+  }
+}
 ---
 
 <Layout title={`Detalles del Documento ${id ?? ''}`}>
   <main class="p-5">
-    {/* Renderizar DocumentDetails pasando solo el idDocumento */}
+    {/* Renderizar DocumentDetails pasando el idDocumento y la lista de usuarios */}
     <DocumentDetails
-      idDocumento={id} 
+      idDocumento={id}
+      usuarios={usuarios} 
       client:load
     />
   </main>
 </Layout>
+
 
 

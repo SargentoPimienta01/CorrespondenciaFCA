@@ -23,7 +23,7 @@ const formatDateForAPI = (date) => {
   return new Date(date).toISOString().slice(0, 19);
 };
 
-const EditDocumentForm = ({ idDocumento }) => {
+const EditDocumentForm = ({ idDocumento, usuarios }) => {
   const [formData, setFormData] = useState({
     idDocumento,
     codigoDoc: '',
@@ -33,7 +33,7 @@ const EditDocumentForm = ({ idDocumento }) => {
     asuntoDoc: '',
     observaciones: '',
     tipoDocumento: '',
-    idEncargado: '',
+    idEncargado: usuarios[0]?.id_usuario || '',
     estado: false,
     documento: null,
   });
@@ -267,16 +267,22 @@ const EditDocumentForm = ({ idDocumento }) => {
             />
           </div>
 
+          {/* Encargado */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="idEncargado">Encargado</label>
-            <input
-              type="text"
+            <select
               name="idEncargado"
               id="idEncargado"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
               value={formData.idEncargado}
               onChange={handleInputChange}
-            />
+            >
+              {usuarios.map((usuario) => (
+                <option key={usuario.id_usuario} value={usuario.id_usuario}>
+                  {usuario.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex flex-col space-y-4">
