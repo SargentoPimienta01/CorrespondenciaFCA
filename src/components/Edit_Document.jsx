@@ -391,6 +391,17 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
               className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
               type="button"
               onClick={() => {
+                const url = `/documentos/asignaciones?idDocumento=${idDocumento}`;
+                window.location.href = url;
+              }}
+            >
+              Hacer Asignacion
+            </button>
+
+            <button
+              className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
+              type="button"
+              onClick={() => {
                 const url = `/documentos/versiones?idDocumento=${idDocumento}`;
                 window.location.href = url;
               }}

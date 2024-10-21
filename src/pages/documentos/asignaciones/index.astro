@@ -1,11 +1,12 @@
 ---
 import Layout from "../../../layouts/Correspondencia.astro";
+import Asignacion from "../../../components/Asignacion";
 
 const { idDocumento } = Astro.params;
 ---
 
-<Layout title="Historial de Asignaciones">
+<Layout title="Asignaciones">
     <section class="p-5">
-      
+      <Asignacion></Asignacion>
     </section>
   </Layout>
