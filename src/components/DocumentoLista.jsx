@@ -127,16 +127,17 @@ const DocumentList = () => {
     const deadline = new Date(fechaPlazo);
     const differenceInDays = (deadline - today) / (1000 * 3600 * 24);
 
-    if (estado === 'concluido') {
-      return { color: 'bg-green-500', importance: 5 }; // Menor importancia
+    if (estado) {
+      // Si estado es true, el documento está concluido
+      return { color: 'bg-green-500', importance: 5 }; // Documento finalizado
     } else if (differenceInDays < 0) {
-      return { color: 'bg-slate-400', importance: 1 }; // Mayor importancia
+      return { color: 'bg-slate-400', importance: 1 }; // Documento vencido
     } else if (differenceInDays <= 2) {
-      return { color: 'bg-red-300', importance: 2 }; // Alta importancia
+      return { color: 'bg-red-300', importance: 2 }; // Alta importancia (próximo a vencer)
     } else if (differenceInDays <= 7) {
-      return { color: 'bg-orange-300', importance: 3 }; // Media importancia
+      return { color: 'bg-orange-300', importance: 3 }; // Importancia media
     } else {
-      return { color: 'bg-gray-200', importance: 4 }; // Menor importancia
+      return { color: 'bg-gray-200', importance: 4 }; // Menor importancia (plazo lejano)
     }
   };
 
@@ -146,6 +147,7 @@ const DocumentList = () => {
     const bColor = getDocumentColor(b.fechaPlazo, b.estado);
     return aColor.importance - bColor.importance; // Ordena según la importancia
   });
+
 
   if (loading) return <div>Cargando documentos...</div>;
   if (error) return <div>Error: {error}</div>;
