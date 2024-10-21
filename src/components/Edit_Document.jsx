@@ -348,12 +348,14 @@ const EditDocumentForm = ({ idDocumento }) => {
           </div>
 
           <div className="flex flex-col">
-            <label htmlFor="documento">Subir Documento</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="documento">Subir Documento</label>
             <input
               type="file"
               name="documento"
               id="documento"
               accept=".pdf,.doc,.docx,.xls,.xlsx"
+              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo cursor-pointer"
+              checked={formData.documento}
               onChange={handleFileChange}
             />
           </div>

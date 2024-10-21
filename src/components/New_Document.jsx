@@ -36,9 +36,8 @@ const NewDocumentForm = ({ usuarios }) => {
     asuntoDoc: '',
     observaciones: '',
     tipoDocumento: '',  
-    ultimaVersion: 1,
     idEncargado: usuarios[0]?.id_usuario || '',  
-    documento: null  // Campo para el archivo (PDF, Word, Excel)
+    documento: null,
   });
 
   // Función para manejar cambios en los inputs
@@ -53,28 +52,16 @@ const NewDocumentForm = ({ usuarios }) => {
   // Función para manejar el cambio de archivo
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-  
-      reader.onload = (event) => {
-        const binaryStr = event.target.result;
-        const byteArray = new Uint8Array(binaryStr); // Convertir a Uint8Array (similar a byte[] en C#)
-        setFormData({
-          ...formData,
-          documento: byteArray,  // Almacenar el archivo convertido en bytes
-        });
-      };
-  
-      reader.readAsArrayBuffer(file); // Leer el archivo como un array de bytes
-    }
+    setFormData({
+      ...formData,
+      documento: file || null,  // Guardar el archivo o dejar null si no hay
+    });
   };
 
-  // Función para manejar el envío del formulario
   const handleSubmit = async (e) => {
-    e.preventDefault();  // Prevenir la recarga de la página
-
+    e.preventDefault();
+  
     const token = getTokenFromCookie();
-
     if (!token) {
       Swal.fire({
         title: 'Error!',
@@ -84,94 +71,88 @@ const NewDocumentForm = ({ usuarios }) => {
       });
       return redirectToLogin();
     }
-
-    // Validar si no se ha subido un archivo
+  
+    // Verificación si hay un archivo y confirmar si se desea continuar sin él
     if (!formData.documento) {
-      const result = await Swal.fire({
-        title: '¿Estás seguro?',
-        text: "No has subido ningún archivo. ¿Deseas continuar sin archivo?",
+      const confirm = await Swal.fire({
+        title: '¿Deseas continuar sin archivo?',
+        text: 'No has seleccionado ningún documento para subir. ¿Deseas continuar con la nueva versión sin archivo adjunto?',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
         confirmButtonText: 'Sí, continuar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
       });
-
-      // Si cancela, detener la operación
-      if (!result.isConfirmed) {
-        Swal.fire({
-          title: 'Cancelado',
-          text: 'El registro fue cancelado.',
-          icon: 'info',
-          confirmButtonText: 'OK',
-        });
-        return;
+  
+      if (!confirm.isConfirmed) {
+        return;  // Si el usuario cancela, detenemos la operación
       }
     }
-
-    // Formatear los datos antes de enviar
-    const formattedData = {
-      ...formData,
-      fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
-      fechaEntrega: formatDateForAPI(formData.fechaEntrega),
-      fechaPlazo: formatDateForAPI(formData.fechaPlazo),
-      idEncargado: parseInt(formData.idEncargado, 10), // Asegurarse de que es un número
-    };
-
+  
     try {
+      const documentData = {
+        codigoDoc: formData.codigoDoc,
+        fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
+        fechaEntrega: formatDateForAPI(formData.fechaEntrega),
+        fechaPlazo: formatDateForAPI(formData.fechaPlazo),
+        asuntoDoc: formData.asuntoDoc,
+        observaciones: formData.observaciones,
+        tipoDocumento: formData.tipoDocumento,
+        idEncargado: parseInt(formData.idEncargado, 10),
+      };
+  
       // Crear el documento
-      const documentResponse = await fetch('http://localhost:5064/api/documentos', {
+      const documentResponse = await fetch(`http://localhost:5064/api/documentos`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formattedData),
+        body: JSON.stringify(documentData),
       });
-
+  
       if (!documentResponse.ok) {
         const errorDetails = await documentResponse.json();
-        console.error('Error en el registro del documento:', errorDetails);
+        console.error('Detalles del error:', errorDetails);
         throw new Error('Error al crear el documento');
       }
-
-      // Obtener el id del documento recién creado
-      const documentData = await documentResponse.json();
-      const { idDocumento } = documentData.data.documento;
-
-      // Crear la primera versión del documento (si existe archivo)
+  
+      const createdDocument = await documentResponse.json(); // Obtener el documento creado
+  
+      // Guardar la nueva versión
       const versionData = new FormData();
-      versionData.append('idDocumento', idDocumento);
-      versionData.append('versionFinal', false);  // Es la primera versión, no es la final
+      versionData.append('idDocumento', createdDocument.data.idDocumento);
+      versionData.append('versionFinal', false); // Como es la primera versión, es false por defecto
       versionData.append('comentario', formData.asuntoDoc);
 
+      // Solo añadir el archivo si existe
       if (formData.documento) {
-        versionData.append('documento', new Blob([formData.documento]));  // Añadir el archivo si existe
+        versionData.append('documento', formData.documento); // Archivo subido
       }
-
+  
+      // Enviar la nueva versión a la API
       const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          // No agregamos 'Content-Type', ya que el navegador lo maneja al usar FormData
         },
-        body: versionData,
+        body: versionData,  // Enviamos los datos usando FormData
       });
-
+  
       if (!versionResponse.ok) {
         const errorDetails = await versionResponse.json();
-        console.error('Error en la creación de la versión:', errorDetails);
+        console.error('Detalles del error en la versión:', errorDetails);
         throw new Error('Error al crear la nueva versión');
       }
-
+  
       Swal.fire({
         title: 'Documento registrado!',
-        text: 'El documento y su primera versión se han registrado exitosamente.',
+        text: 'El documento y su primera versión se han creado exitosamente.',
         icon: 'success',
         confirmButtonText: 'OK',
       });
-
-      // Resetear el formulario después de un registro exitoso
+  
+      // Resetear el formulario
       setFormData({
         codigoDoc: '',
         fechaRecepcionFca: '',
@@ -180,21 +161,21 @@ const NewDocumentForm = ({ usuarios }) => {
         asuntoDoc: '',
         observaciones: '',
         tipoDocumento: '',
-        ultimaVersion: 1,
         idEncargado: usuarios[0]?.id_usuario || '',  
-        documento: null
+        documento: null,
       });
-
+  
     } catch (error) {
-      console.error('Error al conectar con el servidor:', error);
+      console.error('Error al crear el documento y la versión:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'No se pudo registrar el documento y su versión.',
+        text: 'Ocurrió un error al crear el documento y la versión.',
         icon: 'error',
         confirmButtonText: 'OK',
       });
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit}>
@@ -323,12 +304,15 @@ const NewDocumentForm = ({ usuarios }) => {
           {/* Subir Documento */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="documento">Subir Documento</label>
+
+            {/* Input para seleccionar archivos */}
             <input
               type="file"
               name="documento"
               id="documento"
               accept=".pdf,.doc,.docx,.xls,.xlsx"
               onChange={handleFileChange}
+              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo cursor-pointer"
             />
           </div>
 
