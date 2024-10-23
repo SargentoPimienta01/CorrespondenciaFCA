@@ -121,10 +121,11 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
         console.error('Detalles del error:', errorDetails);
         throw new Error('Error al crear el documento');
       }
-  
+
       const createdDocument = await documentResponse.json();
-      const documentId = createdDocument.data?.idDocumento; // Asegúrate de que el campo sea correcto
+      console.log('Respuesta del documento creado:', createdDocument); // Log para inspeccionar la respuesta
   
+      const documentId = createdDocument.data?.documento?.idDocumento; // Acceder correctamente al ID del documento
       if (!documentId) {
         throw new Error('No se pudo obtener el ID del documento creado.');
       }
@@ -154,7 +155,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
       }
   
       const createdAssign = await assignResponse.json();
-      const assignId = createdAssign.data?.idAsignacion;
+      const assignId = createdAssign.data?.asignacion?.idAsignacion;
   
       if (!assignId) {
         throw new Error('No se pudo obtener el ID de la asignación creada.');
@@ -244,19 +245,19 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="idEncargadoDocumento">Encargado del Documento (Dueño)</label>
             <select
-              name="idEncargadoDocumento"
-              id="idEncargadoDocumento"
-              className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.idEncargadoDocumento}
-              onChange={handleInputChange}
-            >
-              <option value="">Seleccione un encargado</option>
-              {usuarios.map((usuario) => (
-                <option key={usuario.id_usuario} value={usuario.id_usuario}>
-                  {usuario.nombre}
-                </option>
-              ))}
-            </select>
+            name="idEncargadoDocumento"
+            id="idEncargadoDocumento"
+            className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
+            value={formData.idEncargadoDocumento}
+            onChange={handleInputChange}
+          >
+            <option value="">Seleccione un encargado</option>
+            {usuarios.map((usuario) => (
+              <option key={usuario.id_usuario} value={usuario.id_usuario}>
+                {usuario.nombre}
+              </option>
+            ))}
+          </select>
           </div>
 
           {/* Tipo de Documento */}
