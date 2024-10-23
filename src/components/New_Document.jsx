@@ -40,7 +40,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
     observaciones: '', // Campo de observaciones añadido
     tipoDocumento: '',  
     idEncargadoDocumento: usuarios[0]?.id_usuario || '', // Encargado del documento (dueño)
-    idEncargadoAsignacion: '', // Encargado de la tarea (asignación)
+    idEncargadoAsignacion: usuarios[0]?.id_usuario || '', // Encargado de la tarea (asignación)
     estado: false,
     documento: null,  // Archivo que se subirá como la primera versión del documento
     instruccion: '', // Campo para la asignación
@@ -166,10 +166,11 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
       versionData.append('idDocumento', documentId); // ID del documento recién creado
       versionData.append('idAsignacion', assignId);  // ID de la asignación recién creada
       versionData.append('versionFinal', false); // Versión no final
-      versionData.append('comentario', formData.asuntoDoc); // Asunto como comentario de la versión
+      versionData.append('comentario', formData.observaciones); // Asunto como comentario de la versión
   
       if (formData.documento) {
         versionData.append('documento', new Blob([new Uint8Array(formData.documento)], { type: 'application/octet-stream' }));
+        console.log('Documento preparado para envío:', versionData.get('documento'));
       }
   
       const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
@@ -179,6 +180,9 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
         },
         body: versionData,
       });
+
+      console.log('Datos Enviados: ', versionData);
+      console.log('Datos Enviados: ', versionResponse);
   
       if (!versionResponse.ok) {
         const errorDetails = await versionResponse.json();
