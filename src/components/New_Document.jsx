@@ -57,20 +57,21 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
     });
   };
 
-  // Función para manejar el cambio de archivo
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        const binaryStr = event.target.result;
-        const byteArray = new Uint8Array(binaryStr); // Convertir a Uint8Array (similar a byte[] en C#)
+        const base64String = btoa(
+          new Uint8Array(event.target.result)
+            .reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
         setFormData({
           ...formData,
-          documento: Array.from(byteArray),  // Almacenamos el archivo convertido en bytes
+          documento: base64String,  // Guardamos el archivo convertido a Base64
         });
       };
-      reader.readAsArrayBuffer(file); // Leer el archivo como un array de bytes
+      reader.readAsArrayBuffer(file); // Leer el archivo como array buffer para convertirlo a Base64
     } else {
       setFormData({
         ...formData,
@@ -91,6 +92,22 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
         confirmButtonText: 'OK',
       });
       return redirectToLogin();
+    }
+
+    // Si no hay archivo, preguntar si se quiere continuar sin archivo
+    if (!formData.documento) {
+      const { isConfirmed } = await Swal.fire({
+        title: 'No has adjuntado ningún archivo',
+        text: '¿Deseas continuar sin adjuntar un archivo?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'No, cancelar',
+      });
+
+      if (!isConfirmed) {
+        return; // Si el usuario cancela, no se envía el formulario
+      }
     }
   
     setLoading(true);
@@ -162,27 +179,24 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
       }
   
       // 3. Crear la primera versión del documento
-      const versionData = new FormData();
-      versionData.append('idDocumento', documentId); // ID del documento recién creado
-      versionData.append('idAsignacion', assignId);  // ID de la asignación recién creada
-      versionData.append('versionFinal', false); // Versión no final
-      versionData.append('comentario', formData.observaciones); // Asunto como comentario de la versión
-  
-      if (formData.documento) {
-        versionData.append('documento', new Blob([new Uint8Array(formData.documento)], { type: 'application/octet-stream' }));
-        console.log('Documento preparado para envío:', versionData.get('documento'));
-      }
+      const versionData = {
+        idDocumento: documentId,
+        idAsignacion: assignId,
+        versionFinal: false,
+        comentario: formData.observaciones,
+        documento: formData.documento || null, // Aquí enviamos el archivo en Base64 o null si no hay archivo
+      };
   
       const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: versionData,
+        body: JSON.stringify(versionData),
       });
 
       console.log('Datos Enviados: ', versionData);
-      console.log('Datos Enviados: ', versionResponse);
   
       if (!versionResponse.ok) {
         const errorDetails = await versionResponse.json();
