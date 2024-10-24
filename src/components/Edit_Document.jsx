@@ -25,7 +25,6 @@ const formatDateForAPI = (date) => {
 
 const EditDocumentForm = ({ idDocumento, usuarios }) => {
   const [formData, setFormData] = useState({
-    idDocumento,
     codigoDoc: '',
     fechaRecepcionFca: '',
     fechaEntrega: '',
@@ -96,7 +95,6 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
         const lastVersion = await fetchLastVersion(token);
 
         setFormData({
-          idDocumento: documentData.idDocumento,
           codigoDoc: documentData.codigoDoc,
           fechaRecepcionFca: lastVersion?.fechaModificacion ? lastVersion.fechaModificacion.split('T')[0] : (documentData.fechaRecepcionFca ? documentData.fechaRecepcionFca.split('T')[0] : ''),
           fechaEntrega: documentData.fechaEntrega ? documentData.fechaEntrega.split('T')[0] : '',
@@ -241,7 +239,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
       }
   
       const versionFormData = new FormData();
-      versionFormData.append('idDocumento', formData.idDocumento);
+      versionFormData.append('idDocumento', idDocumento);
       versionFormData.append('idAsignacion', assignId);
       versionFormData.append('versionFinal', formData.estado);
       versionFormData.append('comentario', formData.asuntoDoc);
@@ -277,7 +275,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
           });
         };
       } else {
-        const versionResponse = await fetch('http://localhost:5064/api/versionxs/upload', {
+        const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
