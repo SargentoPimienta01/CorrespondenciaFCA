@@ -33,9 +33,11 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
     asuntoDoc: '',
     observaciones: '',
     tipoDocumento: '',
-    idEncargado: usuarios[0]?.id_usuario || '',
+    idEncargadoDocumento: usuarios[0]?.id_usuario || '', // Encargado del documento (dueño)
+    idEncargadoAsignacion: usuarios[0]?.id_usuario || '', // Encargado de la tarea (asignación)
     estado: false,
-    documento: null, // Ahora almacena el archivo directamente
+    documento: null, // Almacena el archivo
+    instruccion: '', // Campo para la asignación
   });
 
   const [loading, setLoading] = useState(true);
@@ -102,9 +104,11 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
           asuntoDoc: lastVersion?.comentario || documentData.asuntoDoc,
           observaciones: documentData.observaciones || '',
           tipoDocumento: documentData.tipoDocumento || '',
-          idEncargado: documentData.idEncargado || '',
-          estado: documentData.estado || false, 
+          idEncargadoDocumento: documentData.idEncargado || '',
+          idEncargadoAsignacion: usuarios[0]?.id_usuario || '', // Asignamos el encargado de la asignación al primer usuario
+          estado: documentData.estado || false,
           documento: null, // Inicialmente sin archivo
+          instruccion: '', // Inicialmente sin asignación
         });
 
         setLoading(false);
@@ -137,12 +141,12 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
     if (file) {
       setFormData({
         ...formData,
-        documento: file, // Almacena el archivo directamente
+        documento: file,
       });
     } else {
       setFormData({
         ...formData,
-        documento: null, // Si no se selecciona un archivo, dejamos el campo como null
+        documento: null,
       });
     }
   };
@@ -180,12 +184,15 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
     try {
       // Actualizar documento
       const updatedDocumentData = {
-        ...formData,
+        codigoDoc: formData.codigoDoc,
         fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
-        fechaEntrega: formatDateForAPI(formData.fechaEntrega),
-        fechaPlazo: formatDateForAPI(formData.fechaPlazo),
-        idEncargado: parseInt(formData.idEncargado, 10),
-        estado: formData.estado,
+        fechaEntrega: formData.fechaEntrega ? formatDateForAPI(formData.fechaEntrega) : null,
+        fechaPlazo: formData.fechaPlazo ? formatDateForAPI(formData.fechaPlazo) : null,
+        asuntoDoc: formData.asuntoDoc,
+        observaciones: formData.observaciones,
+        tipoDocumento: formData.tipoDocumento,
+        idEncargado: parseInt(formData.idEncargadoDocumento, 10), // Encargado del documento
+        estado: formData.estado, // Si es la última versión
       };
   
       const documentResponse = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`, {
@@ -202,50 +209,107 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
         console.error('Detalles del error:', errorDetails);
         throw new Error('Error al actualizar el documento');
       }
-  
-      // Crear FormData para la nueva versión
-      const versionFormData = new FormData();
-      versionFormData.append('idDocumento', formData.idDocumento);
-      versionFormData.append('versionFinal', formData.estado);
-      versionFormData.append('comentario', formData.asuntoDoc);
-      
-      // Solo añadimos el archivo si se ha subido uno
-      if (formData.documento) {
-        versionFormData.append('file', formData.documento);
-      }
-  
-      const versionResponse = await fetch('http://localhost:5064/api/versionxs/upload', {
+
+      const assignData = {
+        idDocumento: idDocumento, 
+        fechaAsignado: formatDateForAPI(new Date()), // Fecha actual
+        fechaEntrega: formData.fechaEntrega ? formatDateForAPI(formData.fechaEntrega) : null, 
+        idEncargado: parseInt(formData.idEncargadoAsignacion, 10), // Encargado de la asignación
+        instruccion: formData.instruccion,
+      };
+
+      const assignResponse = await fetch(`http://localhost:5064/api/asignaciones`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: versionFormData,
+        body: JSON.stringify(assignData),
       });
-  
-      if (!versionResponse.ok) {
-        const errorDetails = await versionResponse.json();
-        console.error('Detalles del error en la versión:', errorDetails);
-        throw new Error('Error al crear la nueva versión');
+
+      if (!assignResponse.ok) {
+        const errorDetails = await assignResponse.json();
+        console.error('Detalles del error en la asignación:', errorDetails);
+        throw new Error('Error al crear la asignación');
+      }
+
+      const createdAssign = await assignResponse.json();
+      const assignId = createdAssign.data?.asignacion?.idAsignacion;
+
+      if (!assignId) {
+        throw new Error('No se pudo obtener el ID de la asignación creada.');
       }
   
-      Swal.fire({
-        title: 'Documento actualizado!',
-        text: 'El documento y la versión se han actualizado exitosamente.',
-        icon: 'success',
-        confirmButtonText: 'OK',
-      });
-  
+      const versionFormData = new FormData();
+      versionFormData.append('idDocumento', formData.idDocumento);
+      versionFormData.append('idAsignacion', assignId);
+      versionFormData.append('versionFinal', formData.estado);
+      versionFormData.append('comentario', formData.asuntoDoc);
+
+      if (formData.documento) {
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(formData.documento);
+        reader.onload = async () => {
+          const base64String = btoa(
+            new Uint8Array(reader.result).reduce((data, byte) => data + String.fromCharCode(byte), '')
+          );
+          versionFormData.append('documento', base64String);
+          
+          const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: versionFormData,
+          });
+
+          if (!versionResponse.ok) {
+            const errorDetails = await versionResponse.json();
+            console.error('Detalles del error en la versión:', errorDetails);
+            throw new Error('Error al crear la nueva versión');
+          }
+
+          Swal.fire({
+            title: 'Documento actualizado!',
+            text: 'El documento, la asignación y la nueva versión se han creado exitosamente.',
+            icon: 'success',
+            confirmButtonText: 'OK',
+          });
+        };
+      } else {
+        const versionResponse = await fetch('http://localhost:5064/api/versionxs/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: versionFormData,
+        });
+
+        if (!versionResponse.ok) {
+          const errorDetails = await versionResponse.json();
+          console.error('Detalles del error en la versión:', errorDetails);
+          throw new Error('Error al crear la nueva versión');
+        }
+
+        Swal.fire({
+          title: 'Documento actualizado!',
+          text: 'El documento, la asignación y la nueva versión se han creado exitosamente.',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        });
+      }
+
     } catch (error) {
       console.error('Error en la actualización:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'Ocurrió un error al actualizar el documento y la versión.',
+        text: 'Ocurrió un error al actualizar el documento, la asignación y la versión.',
         icon: 'error',
         confirmButtonText: 'OK',
       });
     }
   };
-    
+
   if (loading) {
     return <div>Cargando datos del documento...</div>;
   }
@@ -253,6 +317,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
   return (
     <form onSubmit={handleSubmit}>
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
+      <h2 className="text-2xl font-bold mb-4">Actualizar Documento</h2>
         <div className="flex flex-col space-y-4">
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="codigoDoc">Código del Documento</label>
@@ -267,14 +332,26 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
             />
           </div>
 
-          {/* Encargado */}
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="idEncargado">Encargado</label>
+            <label className="text-sm font-semibold mb-2" htmlFor="asuntoDoc">Asunto</label>
+            <textarea
+              name="asuntoDoc"
+              id="asuntoDoc"
+              rows="3"
+              className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
+              value={formData.asuntoDoc}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          {/* Encargado del Documento */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="idEncargadoDocumento">Encargado del Documento</label>
             <select
-            name="idEncargado"
-            id="idEncargado"
+            name="idEncargadoDocumento"
+            id="idEncargadoDocumento"
             className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-            value={formData.idEncargado}
+            value={formData.idEncargadoDocumento}
             onChange={handleInputChange}
           >
             {usuarios.map((usuario) => (
@@ -294,18 +371,6 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
                 id="fechaRecepcionFca"
                 className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
                 value={formData.fechaRecepcionFca}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2" htmlFor="fechaEntrega">Fecha de Entrega</label>
-              <input
-                type="date"
-                name="fechaEntrega"
-                id="fechaEntrega"
-                className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
-                value={formData.fechaEntrega}
                 onChange={handleInputChange}
               />
             </div>
@@ -342,18 +407,6 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2" htmlFor="asuntoDoc">Asunto</label>
-            <textarea
-              name="asuntoDoc"
-              id="asuntoDoc"
-              rows="3"
-              className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
-              value={formData.asuntoDoc}
-              onChange={handleInputChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2" htmlFor="documento">Subir Documento</label>
             <input
               type="file"
@@ -364,6 +417,51 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
               onChange={handleFileChange}
             />
           </div>
+
+          <h2 className="text-2xl font-bold mt-8 mb-4">Asignación del Documento</h2>
+
+          {/* Encargado de la Asignación */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="idEncargadoAsignacion">Encargado de la Asignación</label>
+            <select
+            name="idEncargadoAsignacion"
+            id="idEncargadoAsignacion"
+            className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
+            value={formData.idEncargadoAsignacion}
+            onChange={handleInputChange}
+          >
+            {usuarios.map((usuario) => (
+              <option key={usuario.id_usuario} value={usuario.id_usuario}>
+                {usuario.nombre}
+              </option>
+            ))}
+          </select>
+          </div>
+
+          {/* Instrucción para la asignación */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="instruccion">Instrucción para la Asignación</label>
+            <textarea
+              name="instruccion"
+              id="instruccion"
+              rows="3"
+              className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
+              value={formData.instruccion}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-2" htmlFor="fechaEntrega">Fecha de Entrega</label>
+              <input
+                type="date"
+                name="fechaEntrega"
+                id="fechaEntrega"
+                className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
+                value={formData.fechaEntrega}
+                onChange={handleInputChange}
+              />
+            </div>
 
           {/* ¿Es la última versión? */}
           <div className="flex items-center mb-6">
@@ -384,17 +482,6 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
               className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
             >
               Actualizar Documento
-            </button>
-
-            <button
-              className="bg-azul text-white px-6 py-2 rounded-md hover:bg-amarillo transition-all"
-              type="button"
-              onClick={() => {
-                const url = `/documentos/asignaciones?idDocumento=${idDocumento}`;
-                window.location.href = url;
-              }}
-            >
-              Hacer Asignación
             </button>
 
             <button
