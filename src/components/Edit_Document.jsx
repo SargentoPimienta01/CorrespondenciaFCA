@@ -25,6 +25,7 @@ const formatDateForAPI = (date) => {
 
 const EditDocumentForm = ({ idDocumento, usuarios }) => {
   const [formData, setFormData] = useState({
+    idDocumento: idDocumento || '', 
     codigoDoc: '',
     fechaRecepcionFca: '',
     fechaEntrega: '',
@@ -32,11 +33,11 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
     asuntoDoc: '',
     observaciones: '',
     tipoDocumento: '',
-    idEncargadoDocumento: usuarios[0]?.id_usuario || '', // Encargado del documento (dueño)
-    idEncargadoAsignacion: usuarios[0]?.id_usuario || '', // Encargado de la tarea (asignación)
+    idEncargadoDocumento: usuarios[0]?.id_usuario || '',
+    idEncargadoAsignacion: usuarios[0]?.id_usuario || '',
     estado: false,
-    documento: null, // Almacena el archivo
-    instruccion: '', // Campo para la asignación
+    documento: null,
+    instruccion: '',
   });
 
   const [loading, setLoading] = useState(true);
@@ -95,6 +96,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
         const lastVersion = await fetchLastVersion(token);
 
         setFormData({
+          idDocumento: documentData.idDocumento,
           codigoDoc: documentData.codigoDoc,
           fechaRecepcionFca: lastVersion?.fechaModificacion ? lastVersion.fechaModificacion.split('T')[0] : (documentData.fechaRecepcionFca ? documentData.fechaRecepcionFca.split('T')[0] : ''),
           fechaEntrega: documentData.fechaEntrega ? documentData.fechaEntrega.split('T')[0] : '',
@@ -103,10 +105,10 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
           observaciones: documentData.observaciones || '',
           tipoDocumento: documentData.tipoDocumento || '',
           idEncargadoDocumento: documentData.idEncargado || '',
-          idEncargadoAsignacion: usuarios[0]?.id_usuario || '', // Asignamos el encargado de la asignación al primer usuario
+          idEncargadoAsignacion: usuarios[0]?.id_usuario || '',
           estado: documentData.estado || false,
-          documento: null, // Inicialmente sin archivo
-          instruccion: '', // Inicialmente sin asignación
+          documento: null,
+          instruccion: '',
         });
 
         setLoading(false);
@@ -182,6 +184,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
     try {
       // Actualizar documento
       const updatedDocumentData = {
+        idDocumento: formData.idDocumento, // Aseguramos que este campo esté presente
         codigoDoc: formData.codigoDoc,
         fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
         fechaEntrega: formData.fechaEntrega ? formatDateForAPI(formData.fechaEntrega) : null,
@@ -189,8 +192,8 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
         asuntoDoc: formData.asuntoDoc,
         observaciones: formData.observaciones,
         tipoDocumento: formData.tipoDocumento,
-        idEncargado: parseInt(formData.idEncargadoDocumento, 10), // Encargado del documento
-        estado: formData.estado, // Si es la última versión
+        idEncargado: parseInt(formData.idEncargadoDocumento, 10),
+        estado: formData.estado,
       };
   
       const documentResponse = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`, {
@@ -209,10 +212,10 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
       }
 
       const assignData = {
-        idDocumento: idDocumento, 
-        fechaAsignado: formatDateForAPI(new Date()), // Fecha actual
-        fechaEntrega: formData.fechaEntrega ? formatDateForAPI(formData.fechaEntrega) : null, 
-        idEncargado: parseInt(formData.idEncargadoAsignacion, 10), // Encargado de la asignación
+        idDocumento: formData.idDocumento,
+        fechaAsignado: formatDateForAPI(new Date()),
+        fechaEntrega: formData.fechaEntrega ? formatDateForAPI(formData.fechaEntrega) : null,
+        idEncargado: parseInt(formData.idEncargadoAsignacion, 10),
         instruccion: formData.instruccion,
       };
 
@@ -238,79 +241,93 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
         throw new Error('No se pudo obtener el ID de la asignación creada.');
       }
   
-      const versionFormData = new FormData();
-      versionFormData.append('idDocumento', idDocumento);
-      versionFormData.append('idAsignacion', assignId);
-      versionFormData.append('versionFinal', formData.estado);
-      versionFormData.append('comentario', formData.asuntoDoc);
+     // Convertir el archivo a base64
+     let encodedFile = null;
+     if (formData.documento) {
+       const fileReader = new FileReader();
+       fileReader.onload = async () => {
+         encodedFile = btoa(
+           new Uint8Array(fileReader.result).reduce((data, byte) => data + String.fromCharCode(byte), '')
+         );
 
-      if (formData.documento) {
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(formData.documento);
-        reader.onload = async () => {
-          const base64String = btoa(
-            new Uint8Array(reader.result).reduce((data, byte) => data + String.fromCharCode(byte), '')
-          );
-          versionFormData.append('documento', base64String);
-          
-          const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-            body: versionFormData,
-          });
+         const versionData = {
+           idDocumento: formData.idDocumento,
+           idAsignacion: assignId,
+           versionFinal: formData.estado,
+           comentario: formData.observaciones,
+           documento: encodedFile, // Archivo en base64
+         };
 
-          if (!versionResponse.ok) {
-            const errorDetails = await versionResponse.json();
-            console.error('Detalles del error en la versión:', errorDetails);
-            throw new Error('Error al crear la nueva versión');
-          }
+         const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
+           method: 'POST',
+           headers: {
+             'Authorization': `Bearer ${token}`,
+             'Content-Type': 'application/json',
+           },
+           body: JSON.stringify(versionData),
+         });
 
-          Swal.fire({
-            title: 'Documento actualizado!',
-            text: 'El documento, la asignación y la nueva versión se han creado exitosamente.',
-            icon: 'success',
-            confirmButtonText: 'OK',
-          });
-        };
-      } else {
-        const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-          body: versionFormData,
-        });
+         if (!versionResponse.ok) {
+           const errorDetails = await versionResponse.json();
+           console.error('Detalles del error en la versión:', errorDetails);
+           throw new Error('Error al crear la nueva versión');
+         }
 
-        if (!versionResponse.ok) {
-          const errorDetails = await versionResponse.json();
-          console.error('Detalles del error en la versión:', errorDetails);
-          throw new Error('Error al crear la nueva versión');
-        }
+         Swal.fire({
+           title: 'Documento actualizado!',
+           text: 'El documento, la asignación y la nueva versión se han creado exitosamente.',
+           icon: 'success',
+           confirmButtonText: 'OK',
+         });
+       };
 
-        Swal.fire({
-          title: 'Documento actualizado!',
-          text: 'El documento, la asignación y la nueva versión se han creado exitosamente.',
-          icon: 'success',
-          confirmButtonText: 'OK',
-        });
-      }
+       fileReader.readAsArrayBuffer(formData.documento);
+     } else {
+       // Si no hay archivo, enviar solo los datos sin el archivo
+       const versionData = {
+         idDocumento: formData.idDocumento,
+         idAsignacion: assignId,
+         versionFinal: formData.estado,
+         comentario: formData.asuntoDoc,
+         documento: null,
+       };
 
-    } catch (error) {
-      console.error('Error en la actualización:', error);
-      Swal.fire({
-        title: 'Error!',
-        text: 'Ocurrió un error al actualizar el documento, la asignación y la versión.',
-        icon: 'error',
-        confirmButtonText: 'OK',
-      });
-    }
-  };
+       const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
+         method: 'POST',
+         headers: {
+           'Authorization': `Bearer ${token}`,
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify(versionData),
+       });
 
-  if (loading) {
-    return <div>Cargando datos del documento...</div>;
-  }
+       if (!versionResponse.ok) {
+         const errorDetails = await versionResponse.json();
+         console.error('Detalles del error en la versión:', errorDetails);
+         throw new Error('Error al crear la nueva versión');
+       }
+
+       Swal.fire({
+         title: 'Documento actualizado!',
+         text: 'El documento, la asignación y la nueva versión se han creado exitosamente.',
+         icon: 'success',
+         confirmButtonText: 'OK',
+       });
+     }
+   } catch (error) {
+     console.error('Error en la actualización:', error);
+     Swal.fire({
+       title: 'Error!',
+       text: 'Ocurrió un error al actualizar el documento, la asignación y la versión.',
+       icon: 'error',
+       confirmButtonText: 'OK',
+     });
+   }
+ };
+
+ if (loading) {
+   return <div>Cargando datos del documento...</div>;
+ }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -370,6 +387,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
                 className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo"
                 value={formData.fechaRecepcionFca}
                 onChange={handleInputChange}
+                readOnly
               />
             </div>
 
@@ -413,6 +431,19 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
               accept=".pdf,.doc,.docx,.xls,.xlsx"
               className="border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amarillo cursor-pointer"
               onChange={handleFileChange}
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-2" htmlFor="observaciones">Observaciones</label>
+            <textarea
+              name="observaciones"
+              id="observaciones"
+              rows="3"
+              className="border border-gray-300 p-3 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-amarillo"
+              value={formData.observaciones}
+              onChange={handleInputChange}
+              placeholder="Escribe cualquier observación relevante"
             />
           </div>
 
