@@ -117,6 +117,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
       const documentData = {
         codigoDoc: formData.codigoDoc,
         fechaRecepcionFca: formatDateForAPI(formData.fechaRecepcionFca),
+        fechaEntrega: formData.fechaEntrega ? formatDateForAPI(formData.fechaEntrega) : null,
         fechaPlazo: formData.fechaPlazo ? formatDateForAPI(formData.fechaPlazo) : null, // Plazo final para el documento
         asuntoDoc: formData.asuntoDoc,
         observaciones: formData.observaciones,
