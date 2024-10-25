@@ -39,6 +39,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
     asuntoDoc: '',
     observaciones: '', // Campo de observaciones añadido
     tipoDocumento: '',  
+    ultimaVersion: '',
     idEncargadoDocumento: usuarios[0]?.id_usuario || '', // Encargado del documento (dueño)
     idEncargadoAsignacion: usuarios[0]?.id_usuario || '', // Encargado de la tarea (asignación)
     estado: false,
@@ -120,6 +121,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
         fechaEntrega: formData.fechaEntrega ? formatDateForAPI(formData.fechaEntrega) : null,
         fechaPlazo: formData.fechaPlazo ? formatDateForAPI(formData.fechaPlazo) : null, // Plazo final para el documento
         asuntoDoc: formData.asuntoDoc,
+        ultimaVersion: 1,
         observaciones: formData.observaciones,
         tipoDocumento: formData.tipoDocumento,
         idEncargado: parseInt(formData.idEncargadoDocumento, 10),
