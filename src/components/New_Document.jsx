@@ -122,6 +122,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
         fechaPlazo: formData.fechaPlazo ? formatDateForAPI(formData.fechaPlazo) : null, // Plazo final para el documento
         asuntoDoc: formData.asuntoDoc,
         ultimaVersion: 1,
+        estado: false,
         observaciones: formData.observaciones,
         tipoDocumento: formData.tipoDocumento,
         idEncargado: parseInt(formData.idEncargadoDocumento, 10),
@@ -272,7 +273,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
             value={formData.idEncargadoDocumento}
             onChange={handleInputChange}
           >
-            <option value="">Seleccione un encargado</option>
+            <option key='' value="">Seleccione un encargado</option>
             {usuarios.map((usuario) => (
               <option key={usuario.id_usuario} value={usuario.id_usuario}>
                 {usuario.nombre}
