@@ -58,7 +58,7 @@ const EditProcessForm = ({ idProceso }) => {
       }
 
       try {
-        const response = await fetch(`http://localhost:5064/api/procesos/${idProceso}`, {
+        const response = await fetch(`http://32768:8080/api/procesos/${idProceso}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -138,7 +138,7 @@ const EditProcessForm = ({ idProceso }) => {
     };
   
     try {
-      const response = await fetch(`http://localhost:5064/api/procesos/${idProceso}`, {
+      const response = await fetch(`http://32768:8080/api/procesos/${idProceso}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

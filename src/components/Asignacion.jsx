@@ -33,7 +33,7 @@ const NewAssignmentForm = () => {
       }
 
       try {
-        const response = await fetch('http://localhost:5064/api/usuarios', {
+        const response = await fetch('http://32768:8080/api/usuarios', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ const NewAssignmentForm = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5064/api/asignaciones', {
+      const response = await fetch('http://32768:8080/api/asignaciones', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

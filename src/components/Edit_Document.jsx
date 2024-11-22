@@ -44,7 +44,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
 
   // Función para obtener la última versión
   const fetchLastVersion = async (token) => {
-    const response = await fetch(`http://localhost:5064/api/versionxs`, {
+    const response = await fetch(`http://32768:8080/api/versionxs`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -77,7 +77,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
 
       try {
         // Obtener los datos del documento
-        const documentResponse = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`, {
+        const documentResponse = await fetch(`http://32768:8080/api/documentos/${idDocumento}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -196,7 +196,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
         estado: formData.estado,
       };
   
-      const documentResponse = await fetch(`http://localhost:5064/api/documentos/${idDocumento}`, {
+      const documentResponse = await fetch(`http://32768:8080/api/documentos/${idDocumento}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -219,7 +219,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
         instruccion: formData.instruccion,
       };
 
-      const assignResponse = await fetch(`http://localhost:5064/api/asignaciones`, {
+      const assignResponse = await fetch(`http://32768:8080/api/asignaciones`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -258,7 +258,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
            documento: encodedFile, // Archivo en base64
          };
 
-         const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
+         const versionResponse = await fetch('http://32768:8080/api/versionxs', {
            method: 'POST',
            headers: {
              'Authorization': `Bearer ${token}`,
@@ -292,7 +292,7 @@ const EditDocumentForm = ({ idDocumento, usuarios }) => {
          documento: null,
        };
 
-       const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
+       const versionResponse = await fetch('http://32768:8080/api/versionxs', {
          method: 'POST',
          headers: {
            'Authorization': `Bearer ${token}`,

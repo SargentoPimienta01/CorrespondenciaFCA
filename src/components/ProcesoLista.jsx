@@ -53,7 +53,7 @@ const ProcessList = () => {
     setToken(token);
     const fetchProcesos = async () => {
       try {
-        const response = await fetch('http://localhost:5064/api/procesos', {
+        const response = await fetch('http://10.1.1.61:8080/api/procesos', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

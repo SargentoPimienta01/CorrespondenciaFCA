@@ -73,7 +73,7 @@ const DocumentList = () => {
     const fetchDocuments = async () => {
       try {
         console.log('Iniciando fetch de documentos...');
-        const response = await fetch('http://localhost:5064/api/documentos', {
+        const response = await fetch('http://10.1.1.61:8080/api/documentos', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

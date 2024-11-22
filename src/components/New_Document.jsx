@@ -128,7 +128,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
         idEncargado: parseInt(formData.idEncargadoDocumento, 10),
       };
   
-      const documentResponse = await fetch(`http://localhost:5064/api/documentos`, {
+      const documentResponse = await fetch(`http://32768:8080/api/documentos`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -160,7 +160,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
         instruccion: formData.instruccion,
       };
   
-      const assignResponse = await fetch(`http://localhost:5064/api/asignaciones`, {
+      const assignResponse = await fetch(`http://32768:8080/api/asignaciones`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -191,7 +191,7 @@ const NewDocumentAndAssignForm = ({ usuarios }) => {
         documento: formData.documento || null, // Aquí enviamos el archivo en Base64 o null si no hay archivo
       };
   
-      const versionResponse = await fetch('http://localhost:5064/api/versionxs', {
+      const versionResponse = await fetch('http://32768:8080/api/versionxs', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

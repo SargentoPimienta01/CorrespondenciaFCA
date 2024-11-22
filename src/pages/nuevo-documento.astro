@@ -24,7 +24,7 @@ if (!token) {
 } else {
   try {
     // Realizar la solicitud GET para obtener los usuarios desde la API
-    const response = await fetch(`http://localhost:5064/api/usuarios`, {
+    const response = await fetch(`http://32768:8080/api/usuarios`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

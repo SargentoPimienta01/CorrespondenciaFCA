@@ -46,7 +46,7 @@ const AsigList = () => {
 
     const fetchAsignaciones = async () => {
       try {
-        const response = await fetch('http://localhost:5064/api/asignaciones', {
+        const response = await fetch('http://32768:8080/api/asignaciones', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
