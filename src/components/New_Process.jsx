@@ -56,7 +56,7 @@ const NewProcessForm = () => {
     }
 
     try {
-      const url = 'http://32768:8080/api/procesos';
+      const url = 'https://localhost:32769/api/procesos';
 
       const response = await fetch(url, {
         method: 'POST',

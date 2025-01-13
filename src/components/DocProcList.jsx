@@ -20,7 +20,7 @@ const DocumentList = ({ procesoId }) => {
       const token = localStorage.getItem('token'); // Obtener el token de localStorage
 
       try {
-        const response = await fetch(`http://32768:8080/api/ProcesosDocumentos/${procesoId}`, {
+        const response = await fetch(`https://localhost:32769/api/ProcesosDocumentos/${procesoId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,

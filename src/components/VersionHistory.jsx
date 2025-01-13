@@ -47,7 +47,7 @@ const VersionHistory = ({ idDocumento }) => {
       }
 
       try {
-        const response = await fetch(`https://localhost:7105/api/Versionxs?idDocumento=${idDocumento}`, {
+        const response = await fetch(`https://localhost:32769/api/Versionxs?idDocumento=${idDocumento}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,

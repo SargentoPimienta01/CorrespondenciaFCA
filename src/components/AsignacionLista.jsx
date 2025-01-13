@@ -46,7 +46,7 @@ const AsigList = () => {
 
     const fetchAsignaciones = async () => {
       try {
-        const response = await fetch('http://32768:8080/api/asignaciones', {
+        const response = await fetch('https://localhost:32769/api/asignaciones', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -112,6 +112,30 @@ const AsigList = () => {
     });
   };
 
+   // Función que asigna la clase CSS según la fechaEntrega
+   const getAsignacionColor = (fechaEntrega) => {
+    const today = new Date();
+    const deadline = new Date(fechaEntrega);
+    const differenceInDays = (deadline - today) / (1000 * 3600 * 24);
+
+    if (differenceInDays < 0) {
+      return { color: 'bg-slate-400', importance: 1 }; // Vencida
+    } else if (differenceInDays <= 2) {
+      return { color: 'bg-red-300', importance: 2 }; // Alta prioridad
+    } else if (differenceInDays <= 7) {
+      return { color: 'bg-orange-300', importance: 3 }; // Media prioridad
+    } else {
+      return { color: 'bg-gray-200', importance: 4 }; // Baja prioridad
+    }
+  };
+
+  // Ordenar asignaciones por importancia
+  const sortedAsignaciones = [...filteredAsignaciones].sort((a, b) => {
+    const aColor = getAsignacionColor(a.fechaEntrega);
+    const bColor = getAsignacionColor(b.fechaEntrega);
+    return aColor.importance - bColor.importance;
+  });
+
   if (loading) {
     return <div>Cargando asignaciones...</div>;
   }
@@ -144,11 +168,13 @@ const AsigList = () => {
         </button>
       </div>
 
-      {filteredAsignaciones.length > 0 ? (
-        filteredAsignaciones.map((asignacion) => (
+      {sortedAsignaciones.length > 0 ? (
+      sortedAsignaciones.map((asignacion) => {
+        const { color } = getAsignacionColor(asignacion.fechaEntrega); // Determina el color basado en la fechaEntrega
+        return (
           <div
             key={asignacion.idAsignacion}
-            className="bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer mb-2"
+            className={`transition-colors duration-200 ease-in-out rounded-lg overflow-hidden shadow-md cursor-pointer mb-2 ${color}`}
             onClick={() => handleAsignacionClick(asignacion)}
           >
             <div className='p-4'>
@@ -161,7 +187,8 @@ const AsigList = () => {
               </div>
             </div>
           </div>
-        ))
+         );
+        })
       ) : (
         <p>No hay asignaciones disponibles.</p>
       )}

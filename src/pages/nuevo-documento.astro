@@ -24,7 +24,7 @@ if (!token) {
 } else {
   try {
     // Realizar la solicitud GET para obtener los usuarios desde la API
-    const response = await fetch(`http://32768:8080/api/usuarios`, {
+    const response = await fetch(`https://localhost:32769/api/usuarios`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -56,7 +56,6 @@ if (!token) {
 	  <h1>NUEVO DOCUMENTO ATT</h1>
 	</div>
   
-	<!-- Solo renderiza el componente si los usuarios están disponibles -->
 	{usuarios && usuarios.length > 0 ? (
 	  <DocumentoNuevo client:load usuarios={usuarios} />
 	) : (
